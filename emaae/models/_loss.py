@@ -34,7 +34,7 @@ class SparseLoss(nn.Module):
         
         self.loss2_type = loss2_type.lower()
         if self.loss2_type == 'l1':
-            self.sparse_loss = nn.L1Loss()
+            self.loss2 = nn.L1Loss()
         else:
             raise NotImplementedError(f'{self.loss2_type} is not an implemented sparsity loss function.')
         
@@ -56,7 +56,7 @@ class SparseLoss(nn.Module):
         new_alpha = self.penalty_scheduler(self.alpha)
         self.alpha = new_alpha
 
-    def forward(self, input:torch.Tensor, target:torch.Tensor, idx:int, e:int) -> None:
+    def forward(self, input:torch.Tensor, target:torch.Tensor) -> None:
         """
         Calculate loss and add to log
 
@@ -64,14 +64,12 @@ class SparseLoss(nn.Module):
         :param target: torch.Tensor, target matrix for comparison
         :return: calculated loss
         """
-        self.track_alpha.append(self.alpha)
         loss1 = self.loss1(input, target)
         loss2 = self.loss2(input, target)
 
         self.track_alpha.append(self.alpha)
-        self.track_loss1.append(loss1)
-        self.track_loss2.append(loss2)
-        self.track_batch.append(idx)
+        self.track_loss1.append(loss1.item())
+        self.track_loss2.append(loss2.item())
 
         return (1-self.alpha)*loss1 + self.alpha*loss2
     

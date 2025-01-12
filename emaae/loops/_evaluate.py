@@ -49,7 +49,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     metrics = {'mse': mse, 'sparsity':sparsity}
 
     with open(str(save_path /'metrics.json'), 'w') as f:
-        json.dumps(metrics)
+        json.dump(metrics,f)
 
     return metrics
 

@@ -91,7 +91,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         running_vloss=0.0
         with torch.no_grad():
             for vdata in tqdm(val_loader):
-                vinputs,= vdata[0].to(device)
+                vinputs= vdata[0].to(device)
                 voutputs = model(vinputs)
                 vloss = criterion(voutputs, vinputs)
                 running_vloss += vloss.item()

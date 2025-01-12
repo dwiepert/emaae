@@ -55,27 +55,27 @@ class CNNAutoEncoder(nn.Module):
                       'stride':[1,10,2,2,2],
                       'padding':[2,1313,146,146,146]}
         
-        #if self.n_encoder == 4 and self.inner_size==1024 and self.input_dim==13:
-        #    return {'in_size': [self.input_dim,128, 256, 512],
-        #              'out_size': [128, 256, 512,1024],
-        #              'stride': [11,2,2,2],
-        #              'kernel_size':[4,4,2,2],
-        #              'padding':[4,1,0,0]}
+        if self.n_encoder == 4 and self.inner_size==1024 and self.input_dim==13:
+           return {'in_size': [self.input_dim,128, 256, 512],
+                     'out_size': [128, 256, 512,1024],
+                     'kernel_size':[8,2,2,2],
+                     'stride': [10,2,2,2],
+                     'padding':[1313,146,146,146]}
         
         if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13:
             return {'in_size': [self.input_dim, 128, 512],
                       'out_size': [128,512,1024],
-                      'stride': [11,4,2],
-                      'kernel_size':[4,4,2],
-                      'padding':[4,0,0]}
+                      'kernel_size':[8,4,2],
+                      'stride': [10,4,2],
+                      'padding':[1313,438,146]}
         
         ###768 dim encoders
         if self.n_encoder == 5 and self.inner_size==768 and self.input_dim==13:
             return {'in_size': [self.input_dim, self.input_dim,128, 256, 256],
                       'out_size': [self.input_dim, 128, 256, 256, 768],
-                      'stride': [1,11,2,1,3],
-                      'kernel_size':[5,4,4,3,3],
-                      'padding':[2,4,1,1,1]}
+                      'kernel_size':[5,8,2,3,3],
+                      'stride': [1,10,2,1,3],
+                      'padding':[2,1313,146,1,292]}
         
         if self.n_encoder == 4 and self.inner_size==768 and self.input_dim==13:
             return {'in_size': [self.input_dim,128, 256, 256],
@@ -90,6 +90,10 @@ class CNNAutoEncoder(nn.Module):
                       'stride': [11,2,3],
                       'kernel_size':[4,4,3],
                       'padding':[4,1,1]}
+        
+    def _calculate_padding(self, encode=True):
+        if encode:
+            return 
     
     def _decoder_block_options(self):
         """
@@ -198,6 +202,15 @@ class CNNAutoEncoder(nn.Module):
         """
         return self.encoder(x)
     
+    def decode(self, x:torch.Tensor) -> torch.Tensor:
+        """
+        Decode an input sequence
+
+        :param x: tensor, input
+        :return: tensor, decoded input
+        """
+        return self.decoder(x)
+    
     def forward(self, x:torch.Tensor) -> torch.Tensor:
         """
         Forward function of model
@@ -205,12 +218,15 @@ class CNNAutoEncoder(nn.Module):
         :param x: tensor, input
         :return decoded: tensor, output
         """
-        
+        test = x
+        for t in self.encoder:
+            test = t(test)
+            print(test.shape)
         encoded = self.encoder(x)
         test = encoded
-        # for t in self.decoder:
-        #     test = t(test)
-        #     print(test.shape)
+        for t in self.decoder:
+            test = t(test)
+            print(test.shape)
         decoded = self.decoder(encoded)
         return decoded
         

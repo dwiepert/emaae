@@ -146,7 +146,7 @@ if __name__ == "__main__":
         model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, epochs=args.epochs, save_path=save_path, device=device)
 
         #SAVE TRAINED MODEL
-        torch.save(model, save_path / f'{model.get_type}_weights.pth')
+        torch.save(model, str(save_path / f'{model.get_type()}_weights.pth'))
     
     #Evaluate
-    metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path)
+    metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device)
