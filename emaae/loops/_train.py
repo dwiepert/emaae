@@ -18,7 +18,7 @@ from tqdm import tqdm
 from emaae.models import SparseLoss, CNNAutoEncoder
 
 
-def set_up_train(optim_type:str='adamw', lr:float=0.0001, loss1_type:str='mse',
+def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0.0001, loss1_type:str='mse',
                  loss2_type:str='l1', penalty_scheduler:str='step', alpha:float=0.1, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
     """
     Set up optimizer and and loss functions
@@ -33,9 +33,9 @@ def set_up_train(optim_type:str='adamw', lr:float=0.0001, loss1_type:str='mse',
     :return loss_fn: initialized SparseLoss 
     """
     if optim_type=='adamw':
-        optim = torch.optim.AdamW(lr=lr)
+        optim = torch.optim.AdamW(params=model.parameters(),lr=lr)
     elif optim_type=='adam':
-        optim = torch.optim.Adam(lr=lr)
+        optim = torch.optim.Adam(params=model.parameters,lr=lr)
     else:
         return NotImplementedError(f'{optim_type} not implemented.')
 
@@ -44,7 +44,7 @@ def set_up_train(optim_type:str='adamw', lr:float=0.0001, loss1_type:str='mse',
     return optim, loss_fn
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], optim, criterion, 
-          epochs:int, save_path:Union[str, Path]):
+          epochs:int, save_path:Union[str, Path], device):
     """
     Train model
 
@@ -55,6 +55,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param criterion: initialized SparseLoss 
     :param epochs: int, number of epochs to train for
     :param save_path: str/Path, path to save to
+    :param device: torch device
     """
     os.makedirs(save_path, exist_ok=True)
 
@@ -64,12 +65,12 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         model.train(True)
         running_loss = 0.
 
-        for i, data in tqdm(train_loader):
-            inputs, targets = data
+        for data in tqdm(train_loader):
+            inputs = data[0].to(device)
             optim.zero_grad()
 
             outputs = model(inputs)
-            loss = criterion(outputs, targets)
+            loss = criterion(outputs, inputs)
             loss.backward()
 
             optim.step()
@@ -89,11 +90,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         model.eval()
         running_vloss=0.0
         with torch.no_grad():
-            for i,vdata in tqdm(val_loader):
-                vinputs, vtargets = vdata
+            for vdata in tqdm(val_loader):
+                vinputs,= vdata[0].to(device)
                 voutputs = model(vinputs)
-                vloss = criterion(voutputs, vtargets)
-                running_vloss += vloss
+                vloss = criterion(voutputs, vinputs)
+                running_vloss += vloss.item()
         
         avg_vloss = running_vloss / len(val_loader)
         vlog = criterion.get_log()

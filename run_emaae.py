@@ -8,13 +8,14 @@ Last modified: 01/10/2025
 ##built-in
 import argparse
 import json
+import os
 from pathlib import Path
 ##third-party
 import cottoncandy as cc
 import torch
 from torch.utils.data import DataLoader
 ##local
-from emaae.io import EMADataset
+from emaae.io import EMADataset, custom_collatefn
 from emaae.models import CNNAutoEncoder
 from emaae.loops import train, set_up_train, evaluate
 
@@ -44,7 +45,7 @@ if __name__ == "__main__":
                                 help='Size of encoder representations to learn.')
     model_args.add_argument('--n_encoder', type=int, default=5, 
                                 help='Number of encoder blocks to use in model.')
-    model_args.add_argument('--n_decoder', type=int, default=5, 
+    model_args.add_argument('--n_decoder', type=int, default=3, 
                                 help='Number of decoder blocks to use in model.')
     model_args.add_argument('--checkpoint', type=str, default=None, 
                                 help='Checkpoint name of full path to model checkpoint.')
@@ -52,31 +53,41 @@ if __name__ == "__main__":
     train_args = parser.add_argument_group('train', 'training arguments')
     train_args.add_argument('--train', action='store_true',
                                 help='Specify whether to train the model.')
-    train_args.add_argument('--batch_sz', type=int, default=8,
+    train_args.add_argument('--batch_sz', type=int, default=1,
                                 help='Batch size for training.')
     train_args.add_argument('--epochs', type=int, default=1,
                                 help='Number of epochs to train for.')
-    train_args.add_argument('--lr', type=float, default=0.0001,
+    train_args.add_argument('--lr', type=float, default=0.001,
                                 help='Learning rate.')
-    train_args.add_argument('--optimizer', type=str, default='addamw',
+    train_args.add_argument('--optimizer', type=str, default='adamw',
                                 help='Type of optimizer to use for training.')
     train_args.add_argument('--autoencoder_loss', type=str, default='mse',
                                 help='Specify base autoencoder loss type.')
     train_args.add_argument('--sparse_loss', type=str, default='l1',
                                 help='Specify sparsity loss type.')
-    train_args.add_argument('--penalty_scheduler', type=str, default='',
+    train_args.add_argument('--penalty_scheduler', type=str, default='step',
                                 help='Specify what penalty scheduler to use.')
-    train_args.add_argument('--penalty_gamma', type=float, default=0.9,
+    train_args.add_argument('--penalty_gamma', type=float, default=0.01,
                                 help='Specify gamma for updating loss weights.')
     train_args.add_argument('--alpha', type=float, default=None,
                                 help='Specify loss weights.')
     args = parser.parse_args()
+
+    #
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print('Model training on GPU')
+    else:
+        device = torch.device("cpu")
 
     #Prepare directories
     args.train_dir = Path(args.train_dir)
     args.val_dir = Path(args.val_dir)
     args.test_dir = Path(args.test_dir)
     args.out_dir = Path(args.out_dir)
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    assert args.train_dir.exists() and args.val_dir.exists() and args.test_dir.exists(), 'One of the data directories does not exists'
     
     #Load features
     if args.bucket is not None:
@@ -90,9 +101,9 @@ if __name__ == "__main__":
     val_dataset = EMADataset(root_dir=args.val_dir, recursive=args.recursive, cci_features=cci_features)
     test_dataset = EMADataset(root_dir=args.test_dir, recursive=args.recursive, cci_features=cci_features)
     
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_sz, shuffle=True, num_workers=4, collate_fn=custom_collatefn)
+    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=custom_collatefn)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=custom_collatefn)
 
     #LOAD/SAVE MODEL CONFIG
     if args.model_config is not None:
@@ -103,12 +114,20 @@ if __name__ == "__main__":
                         'epochs':args.epochs, 'learning_rate':args.lr, 'optimizer':args.optimizer, 'loss1':args.autoencoder_loss, 'loss2':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'penalty_gamma':args.penalty_gamma, 'alpha': args.alpha}
     
-    save_path = args.out_dir / f'model_{args.feature_type}_lf{model_config['learning_rate']}_epochs{model_config['epochs']}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}{args.penalty_gamma}'
+    lr = model_config['learning_rate']
+    e = model_config['epochs']
+    save_path = args.out_dir / f'model_lf{lr}_epochs{e}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}{args.penalty_gamma}'
+    os.makedirs(save_path, exist_ok=True)
     print('Saving results to:', save_path)
+
+    if args.model_config is None:
+        with open(str(save_path/'model_config.json'), 'w') as f:
+            json.dump(model_config,f)
 
     #Initialize model
     if args.model_type=='cnn':
         model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'])
+        model.to(device)
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
 
@@ -121,13 +140,13 @@ if __name__ == "__main__":
         args.alpha = 0
 
     if args.train:
-        optim, criterion = set_up_train(optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
+        optim, criterion = set_up_train(model=model,optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
                      penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, penalty_gamma=args.penalty_gamma)
         
-        model = train(train_loader, val_loader, model, optim, criterion, args.epochs, save_path)
+        model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, epochs=args.epochs, save_path=save_path, device=device)
 
         #SAVE TRAINED MODEL
         torch.save(model, save_path / f'{model.get_type}_weights.pth')
     
     #Evaluate
-    metrics = evaluate(test_loader, model, save_path)
+    metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path)

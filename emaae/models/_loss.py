@@ -33,13 +33,16 @@ class SparseLoss(nn.Module):
             raise NotImplementedError(f'{self.loss1_type} is not an implemented autoencoder loss function.')
         
         self.loss2_type = loss2_type.lower()
-        if self.loss2 == 'l1':
+        if self.loss2_type == 'l1':
             self.sparse_loss = nn.L1Loss()
-        self.sparse_loss = loss2_type
+        else:
+            raise NotImplementedError(f'{self.loss2_type} is not an implemented sparsity loss function.')
         
         self.penalty_scheduler = penalty_scheduler.lower()
         if self.penalty_scheduler == 'step':
-            self.penalty_scheduler = StepAlpha(kwargs['gamma'])
+            self.penalty_scheduler = StepAlpha(kwargs['penalty_gamma'])
+        else:
+            raise NotImplementedError(f'{self.penalty_scheduler} is not an implemented penalty scheduler function.')
 
         self.track_loss1 = []
         self.track_loss2 = []

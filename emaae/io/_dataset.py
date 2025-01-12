@@ -12,9 +12,10 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+import torchvision
+
 ##local
 from ._load_feats import load_features
-from ._align_times import align_times
 
 class ProcessEMA():
     """
@@ -33,6 +34,12 @@ class ProcessEMA():
         temp = sample['features']
         sample['features'] = temp[:,self.mask]
         return sample
+    
+class ToTensor():
+    def __call__(self, sample:Dict[str,np.ndarray]) -> Dict[str,torch.Tensor]:
+        sample['features'] = torch.from_numpy(sample['features'])
+        sample['times'] = torch.from_numpy(sample['times'])
+        return sample
 
 class EMADataset(Dataset):
     """
@@ -46,20 +53,18 @@ class EMADataset(Dataset):
         self.cci_features = cci_features
         self.recursive=recursive
         self._load_data()
-        self.files = self.features.keys()
-        self.transform = ProcessEMA()
+        self.files = list(self.features.keys())
+        self.transform = torchvision.transforms.Compose([ProcessEMA(), ToTensor()])
 
     def _load_data(self):
         """
         Load features
         """
-        features = load_features(feature_dir=self.root_dir, feature_type='ema', cci_features=self.cci_features,
+        self.features = load_features(feature_dir=self.root_dir, cci_features=self.cci_features,
                           recursive=self.recursive,ignore_str='times')
-        times = load_features(feature_dir=self.root_dir, feature_type='ema', cci_features=self.cci_features,
+        self.times = load_features(feature_dir=self.root_dir, cci_features=self.cci_features,
                             recursive=self.recursive,search_str='times')
-        data = align_times(features, times)
-        self.features = data['features']
-        self.times = data['times']
+        #data = align_times(features, times)
     
     def __len__(self) -> int:
         """
@@ -67,20 +72,33 @@ class EMADataset(Dataset):
         """
         return len(self.features)
 
-    def __getitem__(self, idx:Union[int, List[int], torch.Tensor]) -> Dict[str,np.ndarray]:
+    def __getitem__(self, idx:int) -> Dict[str,np.ndarray]:
         """
         Get item
         
         :param idx: int/List of ints/tensor of indices
         :return: dict, transformed sample
         """
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-
+        #if torch.is_tensor(idx):
+        #    idx = idx.tolist()
+        
+        #if not isinstance(idx,list):
+        #    idx = [idx]
+        
         f = self.files[idx]
-        sample = {'feature': self.features[f], 'times':self.times[f]}
+        sample = {'features': self.features[f], 'times':self.times[f]}
 
         return self.transform(sample)
 
-        
+def custom_collatefn(batch):
+    feat_list = []
+    time_list = []
+
+    for b in batch:
+        feat_list.append(torch.transpose(b['features'],0,1))
+        time_list.append(torch.transpose(b['times'],0,1))
+
+    return torch.stack(feat_list, 0),torch.stack(feat_list,0)
+    
+
         

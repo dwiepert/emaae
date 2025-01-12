@@ -18,13 +18,14 @@ from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
 
-def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path]) -> Dict[str,List[float]]:
+def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device) -> Dict[str,List[float]]:
     """
     Evaluate mean squared error and sparsity (number of zero entries)
 
     :param test_loader: test dataloader
     :param model: trained model
     :param save_path: str/Path, path to save metrics to
+    :param device: torch device
     :return metrics: Dictionary of metrics
     """
     save_path = Path(save_path)
@@ -33,16 +34,16 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     model.eval()
 
     with torch.no_grad():
-        for i,data in tqdm(test_loader):
-            inputs, targets = data
+        for data in tqdm(test_loader):
+            inputs= data[0].to(device)
             outputs = model(inputs)
             encoded = model.encode(inputs)
 
-            targets = np.squeeze(targets.numpy())
-            outputs = np.squeeze(outputs.numpy())
+            targets = np.squeeze(inputs.cpu().numpy())
+            outputs = np.squeeze(outputs.cpu().numpy())
             mse.append(mean_squared_error(targets, outputs))
             
-            encoded = np.squeeze(encoded.numpy())
+            encoded = np.squeeze(encoded.cpu().numpy())
             sparsity.append(np.count_nonzero(encoded==0))
     
     metrics = {'mse': mse, 'sparsity':sparsity}
