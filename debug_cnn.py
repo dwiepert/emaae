@@ -1,19 +1,12 @@
-import torch
-import torch.nn as nn
 import argparse
-from typing import Union,List,Tuple
 import json
 import os
 from pathlib import Path
 from tqdm import tqdm
+from typing import Union,List,Tuple
 ##third-party
-import cottoncandy as cc
 import torch
-from torch.utils.data import DataLoader
-##local
-from emaae.io import EMADataset, custom_collatefn
-from emaae.models import CNNAutoEncoder
-from emaae.loops import train, set_up_train, evaluate
+import torch.nn as nn
 
 #### FUNCTIONS
 def _generate_sequence(function, params) -> nn.Sequential:
@@ -77,8 +70,8 @@ def calculate_padding(l, stride, dilation, kernel_size, output_padding=0,transpo
 #### DEBUG CODE
 
 input1 = './debug/'
-debug_dataset = EMADataset(root_dir=input1, recursive=True)
-debug_loader = DataLoader(debug_dataset, batch_size=1, shuffle=False,collate_fn=custom_collatefn)
+debug_dataset = torch.utils.data.TensorDataset(torch.stack([torch.randn(13,432)], dim=0))
+debug_loader = torch.utils.data.DataLoader(debug_dataset, batch_size=1, shuffle=False)
 
 encoder_params = {'in_size': [13,128, 256, 512],
                      'out_size': [128, 256, 512,1024],
