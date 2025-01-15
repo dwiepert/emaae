@@ -65,10 +65,12 @@ def _decoder_block(in_size:int, out_size:int, k:int, s:Union[int, Tuple], p:int)
 
 def calculate_padding(l, stride, dilation, kernel_size, output_padding=0,transpose=False):
     if transpose:
+        #https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose1d.html
         padding = (l - ((l-1)*stride) - (dilation*(kernel_size-1)) - output_padding - 1) / -2
         return padding 
 
     else:
+        #https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
         padding = (((l -1)*stride) + 1 + (dilation*(kernel_size-1)) - l)/2
         return padding 
     
