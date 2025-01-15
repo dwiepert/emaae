@@ -70,26 +70,26 @@ class CNNAutoEncoder(nn.Module):
                       'padding':[1313,438,146]}
         
         ###768 dim encoders
-        if self.n_encoder == 5 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [self.input_dim, self.input_dim,128, 256, 256],
-                      'out_size': [self.input_dim, 128, 256, 256, 768],
-                      'kernel_size':[5,8,2,3,3],
-                      'stride': [1,10,2,1,3],
-                      'padding':[2,1313,146,1,292]}
+        # if self.n_encoder == 5 and self.inner_size==768 and self.input_dim==13:
+        #     return {'in_size': [self.input_dim, self.input_dim,128, 256, 256],
+        #               'out_size': [self.input_dim, 128, 256, 256, 768],
+        #               'kernel_size':[5,8,2,3,3],
+        #               'stride': [1,10,2,1,3],
+        #               'padding':[2,1313,146,1,292]}
         
-        if self.n_encoder == 4 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [self.input_dim,128, 256, 256],
-                      'out_size': [128, 256, 256,768],
-                      'stride': [11,2,1,3],
-                      'kernel_size':[4,4,3,3],
-                      'padding':[4,1,1,1]}
+        # if self.n_encoder == 4 and self.inner_size==768 and self.input_dim==13:
+        #     return {'in_size': [self.input_dim,128, 256, 256],
+        #               'out_size': [128, 256, 256,768],
+        #               'stride': [11,2,1,3],
+        #               'kernel_size':[4,4,3,3],
+        #               'padding':[4,1,1,1]}
         
-        if self.n_encoder == 3 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [self.input_dim, 128, 256],
-                      'out_size': [128,256,768],
-                      'stride': [11,2,3],
-                      'kernel_size':[4,4,3],
-                      'padding':[4,1,1]}
+        # if self.n_encoder == 3 and self.inner_size==768 and self.input_dim==13:
+        #     return {'in_size': [self.input_dim, 128, 256],
+        #               'out_size': [128,256,768],
+        #               'stride': [11,2,3],
+        #               'kernel_size':[4,4,3],
+        #               'padding':[4,1,1]}
         
     def _calculate_padding(self, encode=True):
         if encode:
@@ -219,12 +219,12 @@ class CNNAutoEncoder(nn.Module):
         :return decoded: tensor, output
         """
         test = x
-        for t in self.encoder:
+        for t in self.teste:
             test = t(test)
             print(test.shape)
         encoded = self.encoder(x)
         test = encoded
-        for t in self.decoder:
+        for t in self.testd:
             test = t(test)
             print(test.shape)
         decoded = self.decoder(encoded)
@@ -238,3 +238,31 @@ class CNNAutoEncoder(nn.Module):
         return f'CNN_Autoencoder_ne{self.n_encoder}_nd{self.n_decoder}_innersz{self.inner_size}'
 
 
+
+
+
+"""
+make_conv(inner_dim, inner_dim, kernel, padding),
+                SamePad(kernel_size=kernel, causal=cfg.discriminator_causal),
+
+https://github.com/facebookresearch/fairseq/blob/main/examples/wav2vec/unsupervised/models/wav2vec_u.py
+
+def make_conv(in_d, out_d, k, p=0, has_dilation=True):
+            conv = nn.Conv1d(
+                in_d,
+                out_d,
+                kernel_size=k,
+                padding=p,
+                dilation=dilation if has_dilation else 1,
+            )
+            if cfg.discriminator_spectral_norm:
+                conv = nn.utils.spectral_norm(conv)
+            elif cfg.discriminator_weight_norm:
+                conv = nn.utils.weight_norm(conv)
+            return conv
+
+https://fairseq.readthedocs.io/en/latest/_modules/fairseq/modules/same_pad.html
+
+Need padding that is half the kernel width rounded up. Add some padding to make sample lengths are even?. Create a floating point? See if it can handle batches with varying sample lengths or if i need to pad within a batch.
+
+"""
