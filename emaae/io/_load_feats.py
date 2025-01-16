@@ -9,6 +9,7 @@ Last modified: 01/10/2025
 ##built-in
 from pathlib import Path
 from typing import Union, Dict
+import warnings
 ##third-party
 import numpy as np
 ##local
@@ -27,6 +28,7 @@ def load_features(feature_dir:Union[str,Path], cci_features=None, recursive:bool
     :param search_str: str, string pattern to search for when loading features
     :param features: loaded feature dict
     """
+    warnings.filterwarnings("ignore", category=UserWarning, module="cottoncandy")
 
     feature_dir = Path(feature_dir)
     if cci_features is None:

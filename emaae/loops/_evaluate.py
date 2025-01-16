@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
+from emaae.utils import fro_norm3d
 
 def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device) -> Dict[str,List[float]]:
     """
@@ -26,6 +27,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     :param model: trained model
     :param save_path: str/Path, path to save metrics to
     :param device: torch device
+    :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
     :return metrics: Dictionary of metrics
     """
     save_path = Path(save_path)
@@ -33,9 +35,14 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     sparsity = []
     model.eval()
 
+    weights = model.get_weights()
+    norms = []
+    for w in weights:
+        norms.append(fro_norm3d(w.numpy()))
+        
     with torch.no_grad():
         for data in tqdm(test_loader):
-            inputs= data[0].to(device)
+            inputs= data.to(device)
             outputs = model(inputs)
             encoded = model.encode(inputs)
 
@@ -46,7 +53,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             encoded = np.squeeze(encoded.cpu().numpy())
             sparsity.append(np.count_nonzero(encoded==0))
     
-    metrics = {'mse': mse, 'sparsity':sparsity}
+    metrics = {'mse': mse, 'sparsity':sparsity, 'weight_norms':norms}
 
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)

@@ -8,6 +8,7 @@ Last modified: 01/10/2025
 ##built-in
 from typing import Dict, Union, List
 from pathlib import Path
+import warnings
 ##third party
 import numpy as np
 import torch
@@ -91,14 +92,23 @@ class EMADataset(Dataset):
         return self.transform(sample)
 
 def custom_collatefn(batch):
+    warnings.filterwarnings("ignore")
+
     feat_list = []
-    time_list = []
-
+    max_t = 0
     for b in batch:
+        f = torch.transpose(b['features'],0,1)
+        if f.shape[-1] > max_t:
+            max_t = f.shape[-1]
         feat_list.append(torch.transpose(b['features'],0,1))
-        time_list.append(torch.transpose(b['times'],0,1))
 
-    return torch.stack(feat_list, 0),torch.stack(feat_list,0)
+    for i in range(len(feat_list)):
+        f = feat_list[i]
+        if f.shape[-1] != max_t:
+            new_f = torch.nn.functional.pad(f,(0,max_t-f.shape[-1]), mode="constant", value=0)
+            feat_list[i] = new_f
+
+    return torch.stack(feat_list, 0)
     
 
         

@@ -5,14 +5,19 @@ Author(s): Daniela Wiepert
 Last modified: 01/10/2025
 """
 
+from typing import Optional 
+
 class StepAlpha():
     """
     Scheduler that updates an alpha value (0-1) by gamma each call
 
     :param gamma: float, value to update alpha by each step
     """
-    def __init__(self, gamma:float=0.1):
-        self.gamma = gamma
+    def __init__(self, gamma:float=0.1, epochs:Optional[int]=None):
+        if epochs is not None:
+            self.gamma = 1 / (epochs-1)
+        else: 
+            self.gamma = gamma
         self.step_counter = 0
     
     def __call__(self, alpha:float) -> float:

@@ -10,8 +10,11 @@ import argparse
 import json
 import os
 from pathlib import Path
+import warnings
 ##third-party
-import cottoncandy as cc
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import cottoncandy as cc
 import torch
 from torch.utils.data import DataLoader
 ##local
@@ -19,7 +22,10 @@ from emaae.io import EMADataset, custom_collatefn
 from emaae.models import CNNAutoEncoder
 from emaae.loops import train, set_up_train, evaluate
 
+warnings.filterwarnings("ignore", category=UserWarning, module="cottoncandy")
+
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_dir', type=str, required=True,
                         help='Path to directory with training data.')
@@ -31,6 +37,7 @@ if __name__ == "__main__":
                         help="Specify a local directory to save configuration files to. If not saving features to corral, this also specifies local directory to save files to.")
     parser.add_argument("--recursive", action="store_true", 
                         help='Recursively find .wav,.flac,.npz files in the feature and stimulus dirs.')
+    parser.add_argument("--debug", action="store_true")
     ##cotton candy
     cc_args = parser.add_argument_group('cc', 'cottoncandy related arguments (loading/saving to corral)')
     cc_args.add_argument('--bucket', type=str, default=None,
@@ -53,11 +60,11 @@ if __name__ == "__main__":
     train_args = parser.add_argument_group('train', 'training arguments')
     train_args.add_argument('--train', action='store_true',
                                 help='Specify whether to train the model.')
-    train_args.add_argument('--batch_sz', type=int, default=1,
+    train_args.add_argument('--batch_sz', type=int, default=2,
                                 help='Batch size for training.')
-    train_args.add_argument('--epochs', type=int, default=1,
+    train_args.add_argument('--epochs', type=int, default=2,
                                 help='Number of epochs to train for.')
-    train_args.add_argument('--lr', type=float, default=0.001,
+    train_args.add_argument('--lr', type=float, default=3e-4,
                                 help='Learning rate.')
     train_args.add_argument('--optimizer', type=str, default='adamw',
                                 help='Type of optimizer to use for training.')
@@ -65,10 +72,10 @@ if __name__ == "__main__":
                                 help='Specify base autoencoder loss type.')
     train_args.add_argument('--sparse_loss', type=str, default='l1',
                                 help='Specify sparsity loss type.')
+    train_args.add_argument('--weight_penalty', action='store_true',
+                                help='Specify whether to add a penalty based on model weights.')
     train_args.add_argument('--penalty_scheduler', type=str, default='step',
                                 help='Specify what penalty scheduler to use.')
-    train_args.add_argument('--penalty_gamma', type=float, default=0.01,
-                                help='Specify gamma for updating loss weights.')
     train_args.add_argument('--alpha', type=float, default=None,
                                 help='Specify loss weights.')
     args = parser.parse_args()
@@ -112,11 +119,11 @@ if __name__ == "__main__":
     else:
         model_config = {'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':13, 'model_type':args.model_type, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'optimizer':args.optimizer, 'loss1':args.autoencoder_loss, 'loss2':args.sparse_loss, 
-                        'penalty_scheduler':args.penalty_scheduler, 'penalty_gamma':args.penalty_gamma, 'alpha': args.alpha}
+                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha}
     
     lr = model_config['learning_rate']
     e = model_config['epochs']
-    save_path = args.out_dir / f'model_lf{lr}_epochs{e}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}{args.penalty_gamma}'
+    save_path = args.out_dir / f'model_lf{lr}_epochs{e}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}_weightpenalty{int(args.weight_penalty)}'
     os.makedirs(save_path, exist_ok=True)
     print('Saving results to:', save_path)
 
@@ -141,9 +148,10 @@ if __name__ == "__main__":
 
     if args.train:
         optim, criterion = set_up_train(model=model,optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
-                     penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, penalty_gamma=args.penalty_gamma)
+                     penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, epochs=args.epochs, weight_penalty=args.weight_penalty)
         
-        model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, epochs=args.epochs, save_path=save_path, device=device)
+        model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
+                      epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,debug=args.debug)
 
         #SAVE TRAINED MODEL
         torch.save(model, str(save_path / f'{model.get_type()}_weights.pth'))

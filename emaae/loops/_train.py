@@ -17,9 +17,8 @@ from tqdm import tqdm
 ##local
 from emaae.models import SparseLoss, CNNAutoEncoder
 
-
 def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0.0001, loss1_type:str='mse',
-                 loss2_type:str='l1', penalty_scheduler:str='step', alpha:float=0.1, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
+                 loss2_type:str='l1', penalty_scheduler:str='step', alpha:float=0.1, weight_penalty:bool=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
     """
     Set up optimizer and and loss functions
 
@@ -29,6 +28,8 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
     :param loss2_type: str, sparse loss type (default = l1)
     :param penalty_scheduler: str, type of penalty scheduler (default = step)
     :param alpha: float, alpha for loss function (default=0.1)
+    :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
+    :param **kwargs: any additional penalty scheduler parameters
     :return optim: torch.optim, initialized optimizer
     :return loss_fn: initialized SparseLoss 
     """
@@ -39,12 +40,12 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
     else:
         return NotImplementedError(f'{optim_type} not implemented.')
 
-    loss_fn = SparseLoss(alpha=alpha, loss1_type=loss1_type, loss2_type=loss2_type, penalty_scheduler=penalty_scheduler, **kwargs)
+    loss_fn = SparseLoss(alpha=alpha, loss1_type=loss1_type, loss2_type=loss2_type, penalty_scheduler=penalty_scheduler, weight_penalty=weight_penalty, **kwargs)
 
     return optim, loss_fn
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], optim, criterion, 
-          epochs:int, save_path:Union[str, Path], device):
+          epochs:int, save_path:Union[str, Path], device, weight_penalty:bool=False, debug:bool=False):
     """
     Train model
 
@@ -56,6 +57,8 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param epochs: int, number of epochs to train for
     :param save_path: str/Path, path to save to
     :param device: torch device
+    :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default=False)
+    :param debug: boolean, prints debugging statements (default=False)
     """
     os.makedirs(save_path, exist_ok=True)
 
@@ -66,11 +69,16 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         running_loss = 0.
 
         for data in tqdm(train_loader):
-            inputs = data[0].to(device)
+            inputs = data.to(device)
             optim.zero_grad()
 
-            outputs = model(inputs)
-            loss = criterion(outputs, inputs)
+            outputs = model(inputs, debug=debug)
+
+            if weight_penalty:
+                weights = model.get_weights()
+                loss = criterion(outputs, inputs, weights)
+            else:
+                loss = criterion(outputs, inputs)
             loss.backward()
 
             optim.step()
@@ -87,24 +95,33 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         criterion.clear_log()
 
-        model.eval()
-        running_vloss=0.0
-        with torch.no_grad():
-            for vdata in tqdm(val_loader):
-                vinputs= vdata[0].to(device)
-                voutputs = model(vinputs)
-                vloss = criterion(voutputs, vinputs)
-                running_vloss += vloss.item()
-        
-        avg_vloss = running_vloss / len(val_loader)
-        vlog = criterion.get_log()
-        vlog['avg_loss'] = avg_vloss
-        vlog['epoch'] = e
-        
-        with open(str(save_path / f'vallog{e}.json'), 'w') as f:
-            json.dump(log, f)
-        
-        criterion.clear_log()
+        if e % 5 == 0:
+            print(f'Average loss at Epoch {e}: {avg_loss}')
+            model.eval()
+            running_vloss=0.0
+            if weight_penalty:
+                vweights = model.get_weights()
+            with torch.no_grad():
+                for vdata in tqdm(val_loader):
+                    vinputs= vdata.to(device)
+                    voutputs = model(vinputs, debug=debug)
+                    if weight_penalty:
+                        vloss = criterion(voutputs, vinputs, vweights)
+                    else:
+                        vloss = criterion(voutputs, vinputs)
+                    running_vloss += vloss.item()
+            
+            avg_vloss = running_vloss / len(val_loader)
+            vlog = criterion.get_log()
+            vlog['avg_loss'] = avg_vloss
+            vlog['epoch'] = e
+            
+            with open(str(save_path / f'vallog{e}.json'), 'w') as f:
+                json.dump(log, f)
+            
+            criterion.clear_log()
+
+            print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
         criterion.step()
     
