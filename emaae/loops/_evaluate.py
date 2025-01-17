@@ -38,7 +38,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     weights = model.get_weights()
     norms = []
     for w in weights:
-        norms.append(fro_norm3d(w.numpy()))
+        norms.append(fro_norm3d(w.cpu().numpy()))
         
     with torch.no_grad():
         for data in tqdm(test_loader):

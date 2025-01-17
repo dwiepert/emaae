@@ -57,3 +57,13 @@ Training arguments:
 * --penalty_scheduler: type of penalty scheduler
 * --penalty_gamma: alpha update parameter for scheduler
 * --alpha: preset alpha for loss function (don't use if using scheduler, default = None)
+
+
+
+### TODO
+1. Consider using conv-transpose still in the encoder part of the network?* last thing to try
+2. same # of layers in encoder/decoder 
+3. More layers in encoder/decoder
+4. More epochs - Try 100 see what changes?
+5. Try smaller batch size - see what changes? 1, 8, 16, 32
+6. Try different learning rate? 0.0001, 0.001, 0.0005
