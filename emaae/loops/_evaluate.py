@@ -38,7 +38,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     weights = model.get_weights()
     norms = []
     for w in weights:
-        norms.append(fro_norm3d(w.cpu().numpy()))
+        norms.append(float(fro_norm3d(w.cpu().numpy())))
         
     with torch.no_grad():
         for data in tqdm(test_loader):
@@ -48,10 +48,10 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
-            mse.append(mean_squared_error(targets, outputs))
+            mse.append(float(mean_squared_error(targets, outputs)))
             
             encoded = np.squeeze(encoded.cpu().numpy())
-            sparsity.append(np.count_nonzero(encoded==0))
+            sparsity.append(float(np.count_nonzero(encoded==0)))
     
     metrics = {'mse': mse, 'sparsity':sparsity, 'weight_norms':norms}
 
