@@ -141,10 +141,6 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
 
-    #Load checkpoint
-    if args.checkpoint is not None:
-        model.load_state_dict(torch.load(args.checkpoint))
-
     #Train
     if args.alpha is None:
         args.alpha = 0
