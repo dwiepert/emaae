@@ -24,6 +24,7 @@ class CNNAutoEncoder(nn.Module):
     """
     def __init__(self, input_dim:int=13, n_encoder:int=5, n_decoder:int=5, inner_size:int=1024):
         super(CNNAutoEncoder, self).__init__()
+        print(f'{n_encoder} encoder layers, {n_decoder} decoder layers, {inner_size} inner dims.')
         self.input_dim = input_dim
         if self.input_dim not in [13]:
             raise NotImplementedError(f'Model not compatible with {self.input_dim} dimensional features.')

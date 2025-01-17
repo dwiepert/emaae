@@ -48,12 +48,12 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
-            mse.append(float(mean_squared_error(targets, outputs)))
+            mse.append(mean_squared_error(targets, outputs))
             
             encoded = np.squeeze(encoded.cpu().numpy())
-            sparsity.append(float(np.count_nonzero(encoded==0)))
+            sparsity.append(np.count_nonzero(encoded==0))
     
-    metrics = {'mse': mse, 'sparsity':sparsity, 'weight_norms':norms}
+    metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms}
 
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)
