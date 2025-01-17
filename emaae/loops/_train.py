@@ -66,6 +66,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     start_time = time.time()
     for e in range(epochs):
         print('EPOCH {}:'.format(e + 1))
+        est = time.time()
 
         model.train(True)
         running_loss = 0.
@@ -97,8 +98,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         criterion.clear_log()
 
-        if e % 5 == 0:
+
+        if e ==1 or e % 5 == 0:
+            eet = time.time()
             print(f'Average loss at Epoch {e}: {avg_loss}')
+            print(f'Epoch {e} run time: {(eet-est)/60}')
             model.eval()
             running_vloss=0.0
             if weight_penalty:
