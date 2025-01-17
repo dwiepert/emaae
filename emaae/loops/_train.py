@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 from typing import Union
+import time
 ##third party
 import torch
 from torch.utils.data import DataLoader
@@ -62,6 +63,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     """
     os.makedirs(save_path, exist_ok=True)
 
+    start_time = time.time()
     for e in range(epochs):
         print('EPOCH {}:'.format(e + 1))
 
@@ -125,5 +127,8 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         criterion.step()
     
+    end_time = time.time()
+
+    print(f'Model trained in {(end_time-start_time)/60} minutes.')
     return model
 
