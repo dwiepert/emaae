@@ -11,6 +11,7 @@ setup(
         'torchaudio==2.2.2',
         'torchvision==0.17.2',
         'torch==2.2.2',
+        'tqdm=4.67.1',
         'cottoncandy==0.2.0',
         'scipy==1.15.0',
         'scikit-learn==1.6.1'
