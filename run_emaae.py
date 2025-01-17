@@ -133,8 +133,11 @@ if __name__ == "__main__":
 
     #Initialize model
     if args.model_type=='cnn':
-        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'])
-        model.to(device)
+        if args.checkpoint is not None:
+            model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'])
+        else:
+            model = torch.load(args.checkpoint)
+        model = model.to(device)
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
 
