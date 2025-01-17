@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     #Load checkpoint
     if args.checkpoint is not None:
-        model.load_state_dict(torch.load(args.checkpoint)['model_state_dict'])
+        model.load_state_dict(torch.load(args.checkpoint))
 
     #Train
     if args.alpha is None:
