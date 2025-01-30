@@ -34,6 +34,7 @@ def load_features(feature_dir:Union[str,Path], cci_features=None, recursive:bool
     if cci_features is None:
         if recursive:
             paths = sorted(list(feature_dir.rglob('*.npz')))
+            paths = [p for p in paths if str(feature_dir) in str(p)]
         else:
             paths = sorted(list(feature_dir.glob('*.npz')))
 

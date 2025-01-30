@@ -58,8 +58,8 @@ if __name__ == "__main__":
                                 help='Checkpoint name of full path to model checkpoint.')
     ##train args
     train_args = parser.add_argument_group('train', 'training arguments')
-    train_args.add_argument('--train', action='store_true',
-                                help='Specify whether to train the model.')
+    train_args.add_argument('--eval_only', action='store_true',
+                                help='Specify whether to run only evaluation.')
     train_args.add_argument('--batch_sz', type=int, default=2,
                                 help='Batch size for training.')
     train_args.add_argument('--epochs', type=int, default=2,
@@ -107,6 +107,11 @@ if __name__ == "__main__":
     train_dataset = EMADataset(root_dir=args.train_dir, recursive=args.recursive, cci_features=cci_features)
     val_dataset = EMADataset(root_dir=args.val_dir, recursive=args.recursive, cci_features=cci_features)
     test_dataset = EMADataset(root_dir=args.test_dir, recursive=args.recursive, cci_features=cci_features)
+
+    #DEBUG:
+    assert not bool(set(train_dataset.files) & set(val_dataset.files)), 'Overlapping files between train and validation set.'
+    assert not bool(set(train_dataset.files) & set(test_dataset.files)), 'Overlapping files between train and test set.'
+    assert not bool(set(test_dataset.files) & set(val_dataset.files)), 'Overlapping files between val and test set.'
     
     train_loader = DataLoader(train_dataset, batch_size=args.batch_sz, shuffle=True, num_workers=4, collate_fn=custom_collatefn)
     val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=custom_collatefn)
@@ -133,7 +138,7 @@ if __name__ == "__main__":
 
     #Initialize model
     if args.model_type=='cnn':
-        if args.checkpoint is not None:
+        if args.checkpoint is None:
             model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'])
         else:
             model = torch.load(args.checkpoint)
@@ -143,14 +148,17 @@ if __name__ == "__main__":
 
     #Train
     if args.alpha is None:
-        args.alpha = 0
+        args.alpha = 0.25
+        update=True
+    else:
+        update=False
 
-    if args.train:
+    if not args.eval_only:
         optim, criterion = set_up_train(model=model,optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
                      penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, epochs=args.epochs, weight_penalty=args.weight_penalty)
         
         model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
-                      epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,debug=args.debug)
+                      epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,update=update,debug=args.debug)
 
         #SAVE TRAINED MODEL
         torch.save(model, str(save_path / f'{model.get_type()}_weights.pth'))

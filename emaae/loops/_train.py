@@ -16,7 +16,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
-from emaae.models import SparseLoss, CNNAutoEncoder
+from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
 
 def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0.0001, loss1_type:str='mse',
                  loss2_type:str='l1', penalty_scheduler:str='step', alpha:float=0.1, weight_penalty:bool=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
@@ -46,7 +46,7 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
     return optim, loss_fn
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], optim, criterion, 
-          epochs:int, save_path:Union[str, Path], device, weight_penalty:bool=False, debug:bool=False):
+          epochs:int, save_path:Union[str, Path], device, weight_penalty:bool=False, update:bool=False, debug:bool=False):
     """
     Train model
 
@@ -62,8 +62,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param debug: boolean, prints debugging statements (default=False)
     """
     os.makedirs(save_path, exist_ok=True)
-
+    early_stopping = EarlyStopping()
     start_time = time.time()
+    alpha_update = False
     for e in range(epochs):
         print('EPOCH {}:'.format(e + 1))
         est = time.time()
@@ -98,8 +99,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         criterion.clear_log()
 
-
-        if e ==1 or e % 5 == 0:
+        if e==0 or e % 5 == 0:
             eet = time.time()
             print(f'Average loss at Epoch {e}: {avg_loss}')
             print(f'Epoch {e} run time: {(eet-est)/60}')
@@ -123,16 +123,22 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             vlog['epoch'] = e
             
             with open(str(save_path / f'vallog{e}.json'), 'w') as f:
-                json.dump(log, f)
+                json.dump(vlog, f)
             
             criterion.clear_log()
 
+            early_stopping(avg_vloss, model)
+            if early_stopping.early_stop and not alpha_update:
+                print("Early stopping. Switching to alpha update.") 
+                alpha_update=True
+
             print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
-        criterion.step()
+        if alpha_update and update:
+            criterion.step()
     
     end_time = time.time()
 
     print(f'Model trained in {(end_time-start_time)/60} minutes.')
-    return model
+    return model, early_stopping.get_best_model()
 

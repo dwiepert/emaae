@@ -4,3 +4,9 @@
 /.vscode
 .DS_Store
 runs.txt
+.Rproj.user
+/debug
+/val
+Analysis.Rmd
+Analysis.nb.html
+.Rhistory
