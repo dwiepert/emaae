@@ -29,10 +29,10 @@ class CNNAutoEncoder(nn.Module):
         if self.input_dim not in [13]:
             raise NotImplementedError(f'Model not compatible with {self.input_dim} dimensional features.')
         self.n_encoder = n_encoder
-        if self.n_encoder not in [3,4,5]:
+        if self.n_encoder not in [2,3,4,5]:
             raise NotImplementedError(f'Model not compatible with {self.n_encoder} encoder blocks.')
         self.n_decoder = n_decoder
-        if self.n_decoder not in [3,4,5]:
+        if self.n_decoder not in [2,3,4,5]:
             raise NotImplementedError(f'Model not compatible with {self.n_decoder} decoder blocks.')
         self.inner_size = inner_size
         if self.inner_size not in [768,1024]:
