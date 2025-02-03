@@ -130,6 +130,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             early_stopping(avg_vloss, model)
             if early_stopping.early_stop and not alpha_update:
                 print("Early stopping. Switching to alpha update.") 
+                torch.save(model, str(save_path / f'{model.get_type()}_best_model_lambda{criterion.alpha}.pth'))
                 alpha_update=True
 
             print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
