@@ -78,6 +78,8 @@ if __name__ == "__main__":
                                 help='Specify what penalty scheduler to use.')
     train_args.add_argument('--alpha', type=float, default=None,
                                 help='Specify loss weights.')
+    train_args.add_argument('--alpha_epochs', type=int, default=15,
+                                help='Specify loss weights.')
     args = parser.parse_args()
 
     #
@@ -124,7 +126,7 @@ if __name__ == "__main__":
     else:
         model_config = {'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':13, 'model_type':args.model_type, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'optimizer':args.optimizer, 'loss1':args.autoencoder_loss, 'loss2':args.sparse_loss, 
-                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha}
+                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs}
     
     lr = model_config['learning_rate']
     e = model_config['epochs']
@@ -155,10 +157,11 @@ if __name__ == "__main__":
 
     if not args.eval_only:
         optim, criterion = set_up_train(model=model,optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
-                     penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, epochs=args.epochs, weight_penalty=args.weight_penalty)
+                     penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, weight_penalty=args.weight_penalty, epochs=args.alpha_epochs,)
         
         model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
-                      epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,update=update,debug=args.debug)
+                      epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,update=update,debug=args.debug,
+                      alpha_epochs=args.alpha_epochs)
 
         #SAVE FINAL TRAINED MODEL
         torch.save(model, str(save_path / f'{model.get_type()}.pth'))

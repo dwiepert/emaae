@@ -46,7 +46,8 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
     return optim, loss_fn
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], optim, criterion, 
-          epochs:int, save_path:Union[str, Path], device, weight_penalty:bool=False, update:bool=False, debug:bool=False):
+          epochs:int, save_path:Union[str, Path], device, weight_penalty:bool=False, update:bool=False, debug:bool=False,
+          alpha_epochs:int=15):
     """
     Train model
 
@@ -60,6 +61,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param device: torch device
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default=False)
     :param debug: boolean, prints debugging statements (default=False)
+    :param alpha_epochs: int, number of epochs to run alpha update for
     """
     os.makedirs(save_path, exist_ok=True)
     early_stopping = EarlyStopping()
@@ -132,11 +134,17 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 print("Early stopping. Switching to alpha update.") 
                 torch.save(model, str(save_path / f'{model.get_type()}_best_model_lambda{criterion.alpha}.pth'))
                 alpha_update=True
+                new_epoch_counter = 0
 
             print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
         if alpha_update and update:
+            print(f'Updating alpha....epoch {new_epoch_counter+1}')
             criterion.step()
+            new_epoch_counter += 1
+        
+            if new_epoch_counter == alpha_epochs:
+                break
     
     end_time = time.time()
 
