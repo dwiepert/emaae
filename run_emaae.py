@@ -166,7 +166,7 @@ if __name__ == "__main__":
         optim, criterion = set_up_train(model=model,optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
                      penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, weight_penalty=args.weight_penalty, epochs=args.alpha_epochs,)
         
-        model, best_model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
+        model= train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
                       epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,update=update,debug=args.debug,
                       alpha_epochs=args.alpha_epochs, early_stop=args.early_stop)
 

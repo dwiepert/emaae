@@ -150,5 +150,5 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     end_time = time.time()
 
     print(f'Model trained in {(end_time-start_time)/60} minutes.')
-    return model, early_stopping.get_best_model()
+    return model
 
