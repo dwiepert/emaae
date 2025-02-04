@@ -60,6 +60,8 @@ if __name__ == "__main__":
     train_args = parser.add_argument_group('train', 'training arguments')
     train_args.add_argument('--eval_only', action='store_true',
                                 help='Specify whether to run only evaluation.')
+    train_args.add_argument('--early_stop', action='store_true',
+                                help='Specify whether to use early stopping.')
     train_args.add_argument('--batch_sz', type=int, default=2,
                                 help='Batch size for training.')
     train_args.add_argument('--epochs', type=int, default=2,
@@ -126,11 +128,16 @@ if __name__ == "__main__":
     else:
         model_config = {'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':13, 'model_type':args.model_type, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'optimizer':args.optimizer, 'loss1':args.autoencoder_loss, 'loss2':args.sparse_loss, 
-                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs}
+                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'early_stop':args.early_stop}
     
     lr = model_config['learning_rate']
     e = model_config['epochs']
-    save_path = args.out_dir / f'model_lf{lr}_epochs{e}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}_weightpenalty{int(args.weight_penalty)}'
+    name_str =  f'model_lf{lr}_epochs{e}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}_weightpenalty{int(args.weight_penalty)}'
+    if args.alpha is not None:
+        name_str += f'_alpha{args.alpha}'
+    if args.early_stop:
+        name_str += f'_earlystop'
+    save_path = args.out_dir / name_str
     os.makedirs(save_path, exist_ok=True)
     print('Saving results to:', save_path)
 
@@ -159,9 +166,9 @@ if __name__ == "__main__":
         optim, criterion = set_up_train(model=model,optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss, loss2_type=args.sparse_loss, 
                      penalty_scheduler=args.penalty_scheduler, alpha=args.alpha, weight_penalty=args.weight_penalty, epochs=args.alpha_epochs,)
         
-        model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
+        model, best_model = train(train_loader=train_loader, val_loader=val_loader, model=model, optim=optim, criterion=criterion, 
                       epochs=args.epochs, save_path=save_path, device=device, weight_penalty=args.weight_penalty,update=update,debug=args.debug,
-                      alpha_epochs=args.alpha_epochs)
+                      alpha_epochs=args.alpha_epochs, early_stop=args.early_stop)
 
         #SAVE FINAL TRAINED MODEL
         torch.save(model, str(save_path / f'{model.get_type()}.pth'))
