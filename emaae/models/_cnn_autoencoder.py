@@ -135,7 +135,7 @@ class CNNAutoEncoder(nn.Module):
     
         for n in range(len(params['in_size'])):
             block = OrderedDict()
-            block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
+            block['batchnorm'] = nn.BatchNorm1d(num_features=params['in_size'][n])
             block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
             block['relu'] = nn.ReLU()
             sequence[f'block{n}'] = nn.Sequential(block)
