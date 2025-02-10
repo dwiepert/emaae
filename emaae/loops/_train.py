@@ -78,13 +78,15 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             inputs = data.to(device)
             optim.zero_grad()
 
-            outputs = model(inputs, debug=debug)
+            encoding = model.encode(inputs)
+            outputs = model.decode(encoding)
+            #outputs = model(inputs, debug=debug)
 
             if weight_penalty:
                 weights = model.get_weights()
-                loss = criterion(outputs, inputs, weights)
+                loss = criterion(input=outputs, target=inputs, encoding=encoding, weights=weights)
             else:
-                loss = criterion(outputs, inputs)
+                loss = criterion(input=outputs, target=inputs, encoding=encoding)
             loss.backward()
 
             optim.step()
@@ -112,11 +114,12 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             with torch.no_grad():
                 for vdata in tqdm(val_loader):
                     vinputs= vdata.to(device)
-                    voutputs = model(vinputs, debug=debug)
+                    vencoding = model.encode(vinputs)
+                    voutputs = model.decode(vencoding)
                     if weight_penalty:
-                        vloss = criterion(voutputs, vinputs, vweights)
+                        vloss = criterion(input=voutputs, target=vinputs, encoding=vencoding,weights=vweights)
                     else:
-                        vloss = criterion(voutputs, vinputs)
+                        vloss = criterion(input=voutputs, target=vinputs, encoding=vencoding)
                     running_vloss += vloss.item()
             
             avg_vloss = running_vloss / len(val_loader)

@@ -71,7 +71,7 @@ class SparseLoss(nn.Module):
         return penalty
 
     
-    def forward(self, input:torch.Tensor, target:torch.Tensor, weights:Optional[List[torch.Tensor]]=None) -> float:
+    def forward(self, input:torch.Tensor, target:torch.Tensor, encoding:torch.tensor, weights:Optional[List[torch.Tensor]]=None) -> float:
         """
         Calculate loss and add to log
 
@@ -81,7 +81,9 @@ class SparseLoss(nn.Module):
         :return total_loss: calculated loss
         """
         loss1 = self.loss1(input, target)
-        loss2 = self.loss2(input, target)
+
+        enc_target = torch.zeros(encoding.shape)
+        loss2 = self.loss2(encoding, enc_target)
 
         total_loss = (1-self.alpha)*loss1 + self.alpha*loss2
 
