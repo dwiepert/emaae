@@ -126,7 +126,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
 
         # VALIDATION (every 5 epochs)
-        if e==0 or e % 5 == 0:
+        if e==0 or e % 1 == 0:
             eet = time.time() # epoch ending time
             print(f'Average loss at Epoch {e}: {avg_loss}')
             print(f'Epoch {e} run time: {(eet-est)/60}')
