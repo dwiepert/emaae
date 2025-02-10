@@ -12,14 +12,11 @@ $ cd audio_features
 $ pip install . 
 ```
 
-You will also need to install:
-* [database_utils repo](https://github.com/dwiepert/database_utils.git)
-
 ## Data
 This model is trained/validated/tested with [LibriSpeech ASR Corpus](https://www.openslr.org/12). We use the clean sets and 100 hours of training data (train-clean-100) and extract EMA features from this. 
 
 ### Extracting EMA from Audio
-This autoencoder expects that 14-dimensional EMA features have been extracted (each audio is converted into a *Tx14* matrix where *T* is the number of timepoints). The EMA features can be extracted using [audio_features repo](https://github.com/dwiepert/audio_features.git), installing the proper requirements for that (including the SPARC model from Cho et al. 2024 that extracts EMA features from a waveform), and running with the following parameters:
+This autoencoder expects that 14-dimensional EMA features have been extracted (each audio is converted into a *Tx14* matrix where *T* is the number of timepoints). The EMA features can be extracted using [audio_features repo](https://github.com/dwiepert/audio_features.git), installing the proper requirements for that (including the SPARC model from Cho et al. 2024 that extracts EMA features from a waveform + database_utils (which you will need to be granted access to)), and running with the following parameters:
 
 ```
 python stimulus_features.py --stimulus_dir=PATH_TO_AUDIO_FILES --out_dir=PATH_TO_SAVE --model_name=en --feature_type=sparc --return_numpy --recursive --skip_window --keep_all
@@ -33,38 +30,42 @@ The model can be trained and evaluated using [run_emaae.py](https://github.com/d
 Required/Important arguments:
 * --train_dir, --test_dir, --val_dir: Path to feature directorys with train/test/validation data (can be cotton candy path)
 * --out_dir: Local directory to save outputs
-* --train: flag for training model (must be true to train)
 
 Feature loading arguments:
 * --recursive: use to flag whether to recursively load features
 * --bucket: cotton candy bucket name if loading using cotton candy
 
 Model initialization arguments:
-* --model_config: path to json with model arguments
-* --model_type: type of model to initialize
-* --inner_size: dimension of encoded representations
-* --n_encoder: number of encoder blocks
-* --n_decoder: number of decoder blocks
-* --checkpoint: checkpoint path or name of checkpoint
+* --model_config: path to json with existing model arguments (used to initialize a model with the same parameters (#layers, input dimension, inner size))
+* --model_type: type of model to initialize (OPTIONS = ['cnn'])
+* --inner_size: dimension of encoded representations (OPTIONS = [1024, 768])
+* --n_encoder: number of encoder blocks (OPTIONS = 2-5)
+* --n_decoder: number of decoder blocks (OPTIONS = 2-5)
+* --checkpoint: checkpoint path or name of checkpoint, expecting a .pth file containing the saved WEIGHTS
 
 Training arguments:
-* --batch_sz: batch size
-* --epochs: number of training epochs
-* --lr: learning rate
-* --optimizer: type of optimizer to initialize
-* --autoencoder_loss: type of autoencoder loss to use
-* --sparse_loss: type of sparsity loss to use
-* --penalty_scheduler: type of penalty scheduler
-* --penalty_gamma: alpha update parameter for scheduler
-* --alpha: preset alpha for loss function (don't use if using scheduler, default = None)
+* --eval_only: flag for skipping training (all following arguments become irrelevant)
+* --early_stop: flag for early stopping
+* --batch_sz: batch size (default = 32)
+* --epochs: number of training epochs (default = 500)
+* --lr: learning rate (default=0.001)
+* --optimizer: type of optimizer to initialize (OPTIONS = ['adamw', 'adam'])
+* --autoencoder_loss: type of autoencoder loss to use (OPTIONS = ['mse'])
+* --sparse_loss: type of sparsity loss to use (OPTIONS = ['l1'])
+* --weight_penalty: flag for adding a penalty based on the model weights
+* --alpha: preset or starting alpha for loss function (default = 0.25)
+* --update: flag to specify whether alpha is being updated 
+* --alpha_epochs: number of epochs to update alpha for (default=15 if early stop is enabled, otherwise it is set to be equivalent to epochs)
+* --penalty_scheduler: type of penalty scheduler (OPTIONS = ['step])
 
+## Visualizations
+Plots are all created using R ([Analysis.Rmd](https://github.com/dwiepert/emaae/main/tree/Analysis.Rmd)).
 
+This has options to create the following plots:
+* Training vs. Validation loss (Combined, Individual)
+* MSE vs. Alpha
+* Eval - Ground Truth EMA vs. Predicted EMA 
+* Visualizing weights? https://gist.github.com/krishvishal/e6bebc0d809a31f56cbccf5e15f24016
 
 ### TODO
-1. Consider using conv-transpose still in the encoder part of the network?* last thing to try
-2. same # of layers in encoder/decoder 
-3. More layers in encoder/decoder
-4. More epochs - Try 100 see what changes?
-5. Try smaller batch size - see what changes? 1, 8, 16, 32
-6. Try different learning rate? 0.0001, 0.001, 0.0005
-7. Try with keeping loudness?
+1. Try with keeping loudness?

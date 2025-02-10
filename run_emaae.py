@@ -62,11 +62,11 @@ if __name__ == "__main__":
                                 help='Specify whether to run only evaluation.')
     train_args.add_argument('--early_stop', action='store_true',
                                 help='Specify whether to use early stopping.')
-    train_args.add_argument('--batch_sz', type=int, default=2,
+    train_args.add_argument('--batch_sz', type=int, default=32,
                                 help='Batch size for training.')
-    train_args.add_argument('--epochs', type=int, default=2,
+    train_args.add_argument('--epochs', type=int, default=500,
                                 help='Number of epochs to train for.')
-    train_args.add_argument('--lr', type=float, default=3e-4,
+    train_args.add_argument('--lr', type=float, default=1e-3,
                                 help='Learning rate.')
     train_args.add_argument('--optimizer', type=str, default='adamw',
                                 help='Type of optimizer to use for training.')
