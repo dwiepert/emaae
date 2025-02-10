@@ -146,7 +146,6 @@ if __name__ == "__main__":
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop}
 
-    if args.model_config is None:
         with open(str(save_path/'model_config.json'), 'w') as f:
             json.dump(model_config,f)
 
