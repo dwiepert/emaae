@@ -66,6 +66,7 @@ This has options to create the following plots:
 * MSE vs. Alpha
 * Eval - Ground Truth EMA vs. Predicted EMA 
 * Visualizing weights? https://gist.github.com/krishvishal/e6bebc0d809a31f56cbccf5e15f24016
+* Visualizing encoding?
 
 ### TODO
 1. Try with keeping loudness?
