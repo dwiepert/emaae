@@ -6,15 +6,14 @@ Last modified: 01/10/2025
 """
 #IMPORTS
 ##built-in
-from typing import Dict, Union, List
 from pathlib import Path
+from typing import Dict, Union, List
 import warnings
 ##third party
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 import torchvision
-
 ##local
 from ._load_feats import load_features
 

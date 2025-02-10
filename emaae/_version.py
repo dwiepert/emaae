@@ -1,4 +1,4 @@
-__version__ = '0.2.1'
+__version__ = '0.3.0'
 
 #change log:
 # 0.0.0: initialized repo
@@ -7,3 +7,4 @@ __version__ = '0.2.1'
 # 0.2.0: CNN revamped + bug fixes
 # 0.2.1: Early stopping added + bug fixes
 # 0.2.2: Loss fix
+# 0.3.0: Updated model/loss/scheduler + Documentation updates

@@ -19,8 +19,8 @@ from tqdm import tqdm
 from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
 
 def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0.0001, 
-                 loss1_type:str='mse', loss2_type:str='l1', 
-                 penalty_scheduler:str='step', alpha:float=0.1, weight_penalty:bool=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
+                 loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
+                 penalty_scheduler:str='step', **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
     """
     Set up optimizer and and loss functions
 
@@ -29,9 +29,9 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
     :param lr: float, learning rate (default = 0.0001)
     :param loss1_type: str, basic autoencoder loss type (default = mse)
     :param loss2_type: str, sparsity loss type (default = l1)
-    :param penalty_scheduler: str, type of penalty scheduler (default = step)
     :param alpha: float, alpha for loss function (default=0.1)
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
+    :param penalty_scheduler: str, type of penalty scheduler (default = step)
     :param **kwargs: any additional penalty scheduler parameters
     :return optim: torch.optim, initialized optimizer
     :return loss_fn: initialized SparseLoss 
@@ -46,8 +46,8 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
         return NotImplementedError(f'{optim_type} not implemented.')
 
     # SET UP LOSS
-    loss_fn = SparseLoss(alpha=alpha, loss1_type=loss1_type, loss2_type=loss2_type,
-                         penalty_scheduler=penalty_scheduler, weight_penalty=weight_penalty, **kwargs)
+    loss_fn = SparseLoss(loss1_type=loss1_type, loss2_type=loss2_type, alpha=alpha,
+                          weight_penalty=weight_penalty, penalty_scheduler=penalty_scheduler, **kwargs)
 
     return optim, loss_fn
 
@@ -76,7 +76,6 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     start_time = time.time() #model start time
     alpha_update = False
     if update and not early_stop:
-        alpha_epochs = epochs
         alpha_update = True
         new_epoch_counter = 0
 
@@ -107,7 +106,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             else:
                 weights = None
 
-            loss = criterion(input=outputs, target=inputs, encoding=encoding, enc_target=enc_target,weights=weights)
+            loss = criterion(decoded=outputs, dec_target=inputs, encoded=encoding, enc_target=enc_target,weights=weights)
             loss.backward()
             running_loss += loss.item()
 
@@ -153,7 +152,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                     voutputs = model.decode(vencoding)
 
                     # LOSS
-                    vloss = criterion(input=voutputs, target=vinputs, encoding=vencoding,enc_target=venc_target, weights=vweights)
+                    vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
                     running_vloss += vloss.item()
             
             # VALIDATION LOG
@@ -173,7 +172,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 early_stopping(avg_vloss, model)
                 if early_stopping.early_stop and not alpha_update:
                     print("Early stopping. Switching to alpha update.") 
-                    torch.save(model, str(save_path / f'{model.get_type()}_best_model_lambda{criterion.alpha}.pth'))
+                    torch.save(model.state_dict(), str(save_path / f'{model.get_type()}_bestmodel_alpha{criterion.alpha}.pth'))
                     alpha_update=True
                     new_epoch_counter = 0
 

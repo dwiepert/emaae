@@ -1,12 +1,21 @@
-import numpy as np
+"""
+Some util functions for this package
+
+Author(s): Daniela Wiepert
+Last modified: 02/10/2025
+"""
+# IMPORTS
+##built-in
 from typing import List
+##third-party
+import numpy as np
 
 def fro_norm3d(mat:np.ndarray) -> float:
     """
     3D frobenius norm
 
-    :param m]at: np.ndarray, matrix
-    :retrn: calculated frobenius norm
+    :param mat: np.ndarray, matrix
+    :return: calculated frobenius norm
     """
     sq_norms = []
     for i in range(mat.shape[-1]):
@@ -19,7 +28,7 @@ def fro_norm3d_list(mat_list:List[np.ndarray]) -> float:
     3D frobenius norm across a list
 
     :param mat_list: list of np.ndarray, matrix
-    :retrn: calculated frobenius norm
+    :return: calculated frobenius norm
     """
 
     sq_norms = []

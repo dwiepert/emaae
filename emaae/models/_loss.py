@@ -2,7 +2,7 @@
 Custom loss function
 
 Author(s): Daniela Wiepert
-Last modified: 01/10/2025
+Last modified: 02/10/2025
 """
 #IMPORTS
 #built-in
@@ -19,13 +19,15 @@ class SparseLoss(nn.Module):
     """
     Custom loss for training autoencoder - adds a sparsity loss and weights each loss
 
-    :param alpha: float, loss weight (0-1)
     :param loss1_type: str, base autoencoder loss (default='mse')
     :param loss2_type: str, sparsity loss (default=L1 Norm)
+    :param alpha: float, loss weight (0-1, default = 0.25)
+    :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
     :param penalty_scheduler: str, scheduler type for updating alpha (default='step')
     :param **kwargs: additional penalty scheduler parameters
     """
-    def __init__(self, alpha:float, loss1_type:str='mse',loss2_type:str='l1',penalty_scheduler:str='step',weight_penalty:bool=False, **kwargs):
+    def __init__(self, loss1_type:str='mse',loss2_type:str='l1',alpha:float=0.25,
+                 weight_penalty:bool=False, penalty_scheduler:str='step', **kwargs):
         super(SparseLoss, self).__init__()
         self.alpha = alpha
         self.loss1_type = loss1_type.lower()
@@ -42,7 +44,7 @@ class SparseLoss(nn.Module):
         
         self.penalty_scheduler = penalty_scheduler.lower()
         if self.penalty_scheduler == 'step':
-            self.penalty_scheduler = StepAlpha(epochs=kwargs['epochs'])
+            self.penalty_scheduler = StepAlpha(alpha=self.alpha, epochs=kwargs['epochs'])
         else:
             raise NotImplementedError(f'{self.penalty_scheduler} is not an implemented penalty scheduler function.')
 
@@ -58,8 +60,8 @@ class SparseLoss(nn.Module):
         """
         Increase alpha using penalty scheduler
         """
-        new_alpha = self.penalty_scheduler(self.alpha)
-        self.alpha = new_alpha
+        self.penalty_scheduler.step()
+        self.alpha = self.penalty_scheduler.get_alpha()
 
     def _weight_norm(self, weights: List[torch.Tensor]) -> float:
         """
@@ -71,17 +73,20 @@ class SparseLoss(nn.Module):
         return penalty
 
     
-    def forward(self, input:torch.Tensor, target:torch.Tensor, encoding:torch.tensor, enc_target:torch.tensor, weights:Optional[List[torch.Tensor]]=None) -> float:
+    def forward(self, decoded:torch.Tensor, dec_target:torch.Tensor, 
+                encoded:torch.Tensor, enc_target:torch.Tensor, weights:Optional[List[torch.Tensor]]=None) -> float:
         """
         Calculate loss and add to log
 
-        :param input: torch.Tensor, model output
-        :param target: torch.Tensor, target matrix for comparison
+        :param decoding: torch.Tensor, model output after decoding
+        :param dec_target: torch.Tensor, target decoding
+        :param encoded: torch.Tensor, model output after encoding
+        :param enc_target: torch.Tensor, target encoding (SHOULD BE A TENSOR OF ALL 0s FOR SPARSITY)
         :param weights: optionally give list of torch.Tensors of all convolutional layer weights
         :return total_loss: calculated loss
         """
-        loss1 = self.loss1(input, target)
-        loss2 = self.loss2(encoding, enc_target)
+        loss1 = self.loss1(decoded, dec_target)
+        loss2 = self.loss2(encoded, enc_target)
 
         total_loss = (1-self.alpha)*loss1 + self.alpha*loss2
 
@@ -110,6 +115,9 @@ class SparseLoss(nn.Module):
         return log
     
     def clear_log(self) -> None:
+        """
+        CLEAR THE LOG - used between training and validation to keep a training and validation log
+        """
         self.track_loss1 = []
         self.track_loss2 = []
         self.track_alpha = []
