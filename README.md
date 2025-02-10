@@ -67,3 +67,4 @@ Training arguments:
 4. More epochs - Try 100 see what changes?
 5. Try smaller batch size - see what changes? 1, 8, 16, 32
 6. Try different learning rate? 0.0001, 0.001, 0.0005
+7. Try with keeping loudness?

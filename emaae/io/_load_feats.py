@@ -21,12 +21,11 @@ def load_features(feature_dir:Union[str,Path], cci_features=None, recursive:bool
     Load features
 
     :param feature_dir: str/Path object, points to directory with feature dirs
-    :param feature_type: str, type of feature
     :param cci_features: cotton candy bucket
     :param recursive: bool, indicates whether to load features recursively
     :param ignore_str: str, string pattern to ignore when loading features
     :param search_str: str, string pattern to search for when loading features
-    :param features: loaded feature dict
+    :return: loaded and split feature dictionary
     """
     warnings.filterwarnings("ignore", category=UserWarning, module="cottoncandy")
 

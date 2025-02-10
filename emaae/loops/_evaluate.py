@@ -2,7 +2,7 @@
 Evaluate a trained model
 
 Author(s): Daniela Wiepert
-Last modified: 01/10/2025
+Last modified: 02/10/2025
 """
 #IMPORTS
 ##built-in
@@ -23,11 +23,10 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     """
     Evaluate mean squared error and sparsity (number of zero entries)
 
-    :param test_loader: test dataloader
+    :param test_loader: test dataloader object
     :param model: trained model
     :param save_path: str/Path, path to save metrics to
     :param device: torch device
-    :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
     :return metrics: Dictionary of metrics
     """
     save_path = Path(save_path)
@@ -35,16 +34,18 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     sparsity = []
     model.eval()
 
+    # LOOK AT WEIGHTS
     weights = model.get_weights()
     norms = []
     for w in weights:
         norms.append(float(fro_norm3d(w.cpu().numpy())))
-        
+
+    # EVALUATION LOOP    
     with torch.no_grad():
         for data in tqdm(test_loader):
             inputs= data.to(device)
-            outputs = model(inputs)
             encoded = model.encode(inputs)
+            outputs = model.decode(encoded)
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
@@ -53,6 +54,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             encoded = np.squeeze(encoded.cpu().numpy())
             sparsity.append(np.count_nonzero(encoded==0))
     
+    # SAVE METRICS
     metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms}
 
     with open(str(save_path /'metrics.json'), 'w') as f:

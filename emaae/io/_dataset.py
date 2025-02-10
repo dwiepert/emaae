@@ -20,7 +20,7 @@ from ._load_feats import load_features
 
 class ProcessEMA():
     """
-    EMA processing transform
+    EMA processing transform - removes loudness information
     """
     def __init__(self):
         self.mask = np.ones(14, dtype=bool)
@@ -37,6 +37,9 @@ class ProcessEMA():
         return sample
     
 class ToTensor():
+    """
+    Convert sample features/times from numpy to tensors
+    """
     def __call__(self, sample:Dict[str,np.ndarray]) -> Dict[str,torch.Tensor]:
         sample['features'] = torch.from_numpy(sample['features'])
         sample['times'] = torch.from_numpy(sample['times'])
@@ -80,18 +83,18 @@ class EMADataset(Dataset):
         :param idx: int/List of ints/tensor of indices
         :return: dict, transformed sample
         """
-        #if torch.is_tensor(idx):
-        #    idx = idx.tolist()
-        
-        #if not isinstance(idx,list):
-        #    idx = [idx]
-        
         f = self.files[idx]
         sample = {'features': self.features[f], 'times':self.times[f]}
 
         return self.transform(sample)
 
-def custom_collatefn(batch):
+def custom_collatefn(batch) -> torch.tensor:
+    """
+    Custom collate function to put batch together 
+
+    :param batch: batch from DataLoader object
+    :return: collated batch in proper format
+    """
     warnings.filterwarnings("ignore")
 
     feat_list = []

@@ -2,7 +2,7 @@
 CNN Autoencoder
 
 Author(s): Daniela Wiepert
-Last modified: 01/11/2025
+Last modified: 02/10/2025
 """
 #IMPORTS
 ##built-in
@@ -41,8 +41,6 @@ class CNNAutoEncoder(nn.Module):
         self.encoder_params = self._encoder_block_options()
         self.decoder_params = self._decoder_block_options()
         self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params)), ('decoder',self._generate_sequence(params=self.decoder_params)) ]))
-        #self.encoder = self._generate_sequence(params=self.encoder_params)
-        #self.decoder = self._generate_sequence(params=self.decoder_params)
 
     def _encoder_block_options(self):
         """
@@ -137,9 +135,9 @@ class CNNAutoEncoder(nn.Module):
     
         for n in range(len(params['in_size'])):
             block = OrderedDict()
+            block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
             block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
             block['relu'] = nn.ReLU()
-            block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
             sequence[f'block{n}'] = nn.Sequential(block)
             
         return nn.Sequential(sequence)
@@ -162,22 +160,22 @@ class CNNAutoEncoder(nn.Module):
         """
         return self.model.decoder(x)
     
-    def forward(self, x:torch.Tensor, debug:bool=False) -> torch.Tensor:
-        """
-        Forward function of model
+    # def forward(self, x:torch.Tensor, debug:bool=False) -> torch.Tensor:
+    #     """
+    #     Forward function of model
 
-        :param x: tensor, input
-        :return decoded: tensor, output
-        """
-        if debug:
-            print(f'Initial size: {x.shape}')
-            encoded = self.model.encoder(x)
-            print(f'Size after encoding: {encoded.shape}')
-            decoded = self.model.decoder(encoded)
-            print(f'Size after decoding: {decoded.shape}')
-            return decoded
-        else:
-            return self.model(x)
+    #     :param x: tensor, input
+    #     :return decoded: tensor, output
+    #     """
+    #     if debug:
+    #         print(f'Initial size: {x.shape}')
+    #         encoded = self.model.encoder(x)
+    #         print(f'Size after encoding: {encoded.shape}')
+    #         decoded = self.model.decoder(encoded)
+    #         print(f'Size after decoding: {decoded.shape}')
+    #         return decoded
+    #     else:
+    #         return self.model(x)
         
     def get_type(self) -> str:
         """
@@ -188,6 +186,7 @@ class CNNAutoEncoder(nn.Module):
     
     def get_weights(self) -> List[torch.Tensor]:
         """
+        :return weights: List of model weights for both encoder and decoder
         """
         weights = []
 
