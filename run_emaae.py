@@ -62,6 +62,8 @@ if __name__ == "__main__":
                                 help='Specify whether to run only evaluation.')
     train_args.add_argument('--early_stop', action='store_true',
                                 help='Specify whether to use early stopping.')
+    train_args.add_argument('--patience', type=int, default=15,
+                                help='Patience for early stopping.')
     train_args.add_argument('--batch_sz', type=int, default=32,
                                 help='Batch size for training.')
     train_args.add_argument('--epochs', type=int, default=500,
@@ -144,7 +146,7 @@ if __name__ == "__main__":
     else:
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
-                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop}
+                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 'patience':args.patience}
 
         with open(str(save_path/'model_config.json'), 'w') as f:
             json.dump(model_config,f)
@@ -168,7 +170,7 @@ if __name__ == "__main__":
         model = train(train_loader=train_loader, val_loader=val_loader, model=model, 
                       device=device, optim=optim, criterion=criterion, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
-                      early_stop=args.early_stop, weight_penalty=args.weight_penalty)
+                      early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty)
         
         #SAVE FINAL TRAINED MODEL
         torch.save(model.state_dict(), str(save_path / f'{model.get_type()}.pth'))

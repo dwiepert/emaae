@@ -53,7 +53,7 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
           optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, save_path:Union[str, Path],
-          epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, weight_penalty:bool=False) -> Union[CNNAutoEncoder]:
+          epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False) -> Union[CNNAutoEncoder]:
     """
     Train a model
 
@@ -72,7 +72,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     """
 
     os.makedirs(save_path, exist_ok=True)
-    early_stopping = EarlyStopping()
+    early_stopping = EarlyStopping(patience=patience)
     start_time = time.time() #model start time
     alpha_update = False
     if update and not early_stop:
