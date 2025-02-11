@@ -196,9 +196,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
     if early_stopping:
         #GET BEST MODEL AGAIN
+        best_model,best_epoch = early_stopping.get_best_model()
         path = save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'
         if not path.exists():
-            best_model,best_epoch = early_stopping.get_best_model()
             torch.save(best_model.state_dict(), str(path))
 
     print(f'Model trained in {(end_time-start_time)/60} minutes.')
