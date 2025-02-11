@@ -48,7 +48,7 @@ class EarlyStopping:
             self.best_score = score
             self.best_model_state = model.state_dict()
             self.best_model = model
-            self.best_score = epoch
+            self.best_epoch = epoch
             self.counter = 0
 
     def load_best_model(self, model: Union[CNNAutoEncoder]) -> Union[CNNAutoEncoder]:
