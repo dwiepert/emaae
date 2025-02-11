@@ -174,8 +174,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                     print("Early stopping. Switching to alpha update.") 
                     best_model,best_epoch = early_stopping.get_best_model()
                     torch.save(best_model.state_dict(), str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
-                    alpha_update=True
-                    new_epoch_counter = 0
+                    if update:
+                        alpha_update=True
+                        new_epoch_counter = 0
+                    else:
+                        break
 
             print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
