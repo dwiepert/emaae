@@ -169,10 +169,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
             # EARLY STOPPING
             if early_stop:
-                early_stopping(avg_vloss, model)
+                early_stopping(avg_vloss, model, e)
                 if early_stopping.early_stop and not alpha_update:
                     print("Early stopping. Switching to alpha update.") 
-                    torch.save(model.state_dict(), str(save_path / f'{model.get_type()}_bestmodel_alpha{criterion.alpha}.pth'))
+                    best_model,best_epoch = early_stopping.get_best_model()
+                    torch.save(best_model.state_dict(), str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
                     alpha_update=True
                     new_epoch_counter = 0
 
@@ -189,6 +190,13 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 break
     
     end_time = time.time() #model training end time
+
+    if early_stopping:
+        #GET BEST MODEL AGAIN
+        path = str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth')
+        if not path.exists():
+            best_model,best_epoch = early_stopping.get_best_model()
+            torch.save(best_model.state_dict(), str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
 
     print(f'Model trained in {(end_time-start_time)/60} minutes.')
     return model

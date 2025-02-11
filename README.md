@@ -27,6 +27,8 @@ This code also has more extensive options for windowing, but training/validation
 ## Training/Evaluating Model
 The model can be trained and evaluated using [run_emaae.py](https://github.com/dwiepert/emaae/main/tree/run_emaae.py). The model is evaluated using mean squared error and quantifying sparsity as the number of zero elements in the encoded representation. 
 
+--early_stop flag recommened for saving best model
+
 Required/Important arguments:
 * --train_dir, --test_dir, --val_dir: Path to feature directorys with train/test/validation data (can be cotton candy path)
 * --out_dir: Local directory to save outputs
