@@ -48,8 +48,10 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             
             # SAVE ENCODINGS
             epath = save_path /'encodings'
+            epath.mkdir(exist_ok=True)
             fname = data['files'][0]
             print(fname)
+
             torch.save(encoded.cpu(),epath/f'{fname}_encoding.pt')
 
             outputs = model.decode(encoded)
