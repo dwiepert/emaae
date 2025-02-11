@@ -89,7 +89,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         
         # TRAINING LOOP
         for data in tqdm(train_loader):
-            inputs = data.to(device)
+            inputs = data['features'].to(device)
             optim.zero_grad()
 
             # ENCODE
@@ -141,7 +141,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             # VALIDATION LOOP
             with torch.no_grad():
                 for vdata in tqdm(val_loader):
-                    vinputs= vdata.to(device)
+                    vinputs= vdata['features'].to(device)
 
                     # ENCODE
                     vencoding = model.encode(vinputs)

@@ -83,7 +83,7 @@ class EMADataset(Dataset):
         :return: dict, transformed sample
         """
         f = self.files[idx]
-        sample = {'features': self.features[f], 'times':self.times[f]}
+        sample = {'files':f, 'features': self.features[f], 'times':self.times[f]}
 
         return self.transform(sample)
 
@@ -97,12 +97,14 @@ def custom_collatefn(batch) -> torch.tensor:
     warnings.filterwarnings("ignore")
 
     feat_list = []
+    file_list = []
     max_t = 0
     for b in batch:
         f = torch.transpose(b['features'],0,1)
         if f.shape[-1] > max_t:
             max_t = f.shape[-1]
         feat_list.append(torch.transpose(b['features'],0,1))
+        file_list.append(b['files'])
 
     for i in range(len(feat_list)):
         f = feat_list[i]
@@ -110,7 +112,7 @@ def custom_collatefn(batch) -> torch.tensor:
             new_f = torch.nn.functional.pad(f,(0,max_t-f.shape[-1]), mode="constant", value=0)
             feat_list[i] = new_f
 
-    return torch.stack(feat_list, 0)
+    return {'features':torch.stack(feat_list, 0), 'files':file_list}
     
 
         
