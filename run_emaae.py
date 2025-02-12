@@ -166,7 +166,7 @@ if __name__ == "__main__":
     
     model = model.to(device)
     if args.checkpoint is not None:
-        checkpoint = torch.load(args.checkpoint)
+        checkpoint = torch.load(args.checkpoint, map_location=device)
         #print(checkpoint.keys())
         #print(model.state_dict().keys())
         model = model.load_state_dict(checkpoint, strict=False)
