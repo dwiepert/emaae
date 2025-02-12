@@ -164,13 +164,12 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
     
-    model = model.to(device)
     if args.checkpoint is not None:
-        checkpoint = torch.load(args.checkpoint, map_location=device)
+        checkpoint = torch.load(args.checkpoint, map_location='cpu')
         #print(checkpoint.keys())
         #print(model.state_dict().keys())
         model = model.load_state_dict(checkpoint, strict=False)
-    #model = model.to(device)
+    model = model.to(device)
 
 
     if not args.eval_only:
