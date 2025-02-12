@@ -62,9 +62,9 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             outputs = model.decode(encoded) 
 
             if decode:
-                print(fname)
+                #print(fname)
                 torch.save(outputs.cpu(),dpath/f'{fname}_decoding.pt')
-                print(f'saved to {dpath}')
+                #print(f'saved to {dpath}')
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
