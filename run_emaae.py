@@ -150,6 +150,7 @@ if __name__ == "__main__":
     if args.model_config is not None:
         with open(args.model_config, "rb") as f:
             model_config = json.load(f)
+        print(model_config)
     else:
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
@@ -165,7 +166,9 @@ if __name__ == "__main__":
         raise NotImplementedError(f'{args.model_type} not implemented.')
     
     if args.checkpoint is not None:
-        model = model.load_state_dict(torch.load(args.checkpoint, weights_only=True))
+        checkpoint = torch.load(args.checkpoint)
+        print(checkpoint.keys())
+        model = model.load_state_dict(checkpoint)
     model = model.to(device)
 
 
