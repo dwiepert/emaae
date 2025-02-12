@@ -38,6 +38,8 @@ if __name__ == "__main__":
                         help='Recursively find .wav,.flac,.npz files in the feature and stimulus dirs.')
     parser.add_argument("--encode", action="store_true", 
                         help='Save encodings of test features')
+    parser.add_argument("--decode", action="store_true", 
+                        help='Save decodings of test features')
     ##cotton candy
     cc_args = parser.add_argument_group('cc', 'cottoncandy related arguments (loading/saving to corral)')
     cc_args.add_argument('--bucket', type=str, default=None,
@@ -181,4 +183,4 @@ if __name__ == "__main__":
         torch.save(model.state_dict(), str(save_path / f'{model.get_type()}.pth'))
     
     #Evaluate
-    metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device, encode=args.encode)
+    metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device, encode=args.encode, decode=args.decode)

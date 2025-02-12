@@ -19,7 +19,7 @@ from tqdm import tqdm
 from emaae.models import CNNAutoEncoder
 from emaae.utils import fro_norm3d
 
-def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, encode:bool=True) -> Dict[str,List[float]]:
+def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, encode:bool=True, decode:bool=True) -> Dict[str,List[float]]:
     """
     Evaluate mean squared error and sparsity (number of zero entries)
 
@@ -28,6 +28,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     :param save_path: str/Path, path to save metrics to
     :param device: torch device
     :param encode: bool, indicate whether to save encodings
+    :param decode: bool, indicate whether to save decodings
     :return metrics: Dictionary of metrics
     """
     save_path = Path(save_path)
@@ -52,11 +53,16 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
                 epath = save_path /'encodings'
                 epath.mkdir(exist_ok=True)
                 fname = data['files'][0]
-                print(fname)
 
                 torch.save(encoded.cpu(),epath/f'{fname}_encoding.pt')
+            
+            outputs = model.decode(encoded) 
 
-            outputs = model.decode(encoded)
+            if decode:
+                dpath = save_path /'decodings'
+                dpath.mkdir(exist_ok=True)
+                fname = data['files'][0]
+                torch.save(outputs.cpu(),dpath/f'{fname}_decoding.pt')
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
