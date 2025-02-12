@@ -168,7 +168,7 @@ if __name__ == "__main__":
         checkpoint = torch.load(args.checkpoint, map_location='cpu')
         #print(checkpoint.keys())
         #print(model.state_dict().keys())
-        model = model.load_state_dict(checkpoint, strict=False)
+        model.load_state_dict(checkpoint)
     model = model.to(device)
 
 
