@@ -126,61 +126,61 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
 
         # VALIDATION (every 5 epochs)
-        if e==0 or e % 1 == 0:
-            eet = time.time() # epoch ending time
-            print(f'Average loss at Epoch {e}: {avg_loss}')
-            print(f'Epoch {e} run time: {(eet-est)/60}')
+        #if e==0 or e % 1 == 0:
+        eet = time.time() # epoch ending time
+        print(f'Average loss at Epoch {e}: {avg_loss}')
+        print(f'Epoch {e} run time: {(eet-est)/60}')
 
-            model.eval()
-            running_vloss=0.0
-            if weight_penalty:
-                vweights = model.get_weights()
-            else:
-                vweights = None
+        model.eval()
+        running_vloss=0.0
+        if weight_penalty:
+            vweights = model.get_weights()
+        else:
+            vweights = None
 
-            # VALIDATION LOOP
-            with torch.no_grad():
-                for vdata in tqdm(val_loader):
-                    vinputs= vdata['features'].to(device)
+        # VALIDATION LOOP
+        with torch.no_grad():
+            for vdata in tqdm(val_loader):
+                vinputs= vdata['features'].to(device)
 
-                    # ENCODE
-                    vencoding = model.encode(vinputs)
-                    venc_target = torch.zeros(vencoding.shape)
-                    venc_target = venc_target.to(device)
+                # ENCODE
+                vencoding = model.encode(vinputs)
+                venc_target = torch.zeros(vencoding.shape)
+                venc_target = venc_target.to(device)
 
-                    # DECODE 
-                    voutputs = model.decode(vencoding)
+                # DECODE 
+                voutputs = model.decode(vencoding)
 
-                    # LOSS
-                    vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
-                    running_vloss += vloss.item()
+                # LOSS
+                vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
+                running_vloss += vloss.item()
             
-            # VALIDATION LOG
-            avg_vloss = running_vloss / len(val_loader)
-            vlog = criterion.get_log()
-            vlog['avg_loss'] = avg_vloss
-            vlog['epoch'] = e
-            
-            with open(str(save_path / f'vallog{e}.json'), 'w') as f:
-                json.dump(vlog, f)
-            
-            criterion.clear_log()
+        # VALIDATION LOG
+        avg_vloss = running_vloss / len(val_loader)
+        vlog = criterion.get_log()
+        vlog['avg_loss'] = avg_vloss
+        vlog['epoch'] = e
+        
+        with open(str(save_path / f'vallog{e}.json'), 'w') as f:
+            json.dump(vlog, f)
+        
+        criterion.clear_log()
 
 
-            # EARLY STOPPING
-            if early_stop:
-                early_stopping(avg_vloss, model, e)
-                if early_stopping.early_stop and not alpha_update:
-                    print("Early stopping. Switching to alpha update.") 
-                    best_model,best_epoch = early_stopping.get_best_model()
-                    torch.save(best_model.state_dict(), str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
-                    if update:
-                        alpha_update=True
-                        new_epoch_counter = 0
-                    else:
-                        break
+        # EARLY STOPPING
+        if early_stop:
+            early_stopping(avg_vloss, model, e)
+            if early_stopping.early_stop and not alpha_update:
+                print("Early stopping. Switching to alpha update.") 
+                best_model,best_epoch = early_stopping.get_best_model()
+                torch.save(best_model.state_dict(), str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
+                if update:
+                    alpha_update=True
+                    new_epoch_counter = 0
+                else:
+                    break
 
-            print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
+        print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
         # CHANGE ALPHA
         # CASE 1: if model has stopped training early and update is True, will run for alpha_epochs
@@ -194,12 +194,15 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     
     end_time = time.time() #model training end time
 
-    if early_stopping:
+    if early_stop:
         #GET BEST MODEL AGAIN
-        best_model,best_epoch = early_stopping.get_best_model()
-        path = save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'
+        best_model,best_epoch, best_score = early_stopping.get_best_model()
+        print(f'Best epoch: {best_epoch}')
+        print(f'Best score: {best_score}')
+        path = save_path / f'{best_model.get_type()}_bestmodel_e{best_epoch}.pth'
         if not path.exists():
             torch.save(best_model.state_dict(), str(path))
+        return best_model
 
     print(f'Model trained in {(end_time-start_time)/60} minutes.')
     return model

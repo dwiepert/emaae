@@ -34,13 +34,13 @@ class EarlyStopping:
         :param val_loss: float, validation loss
         :param model: current model
         """
-        score = -val_loss
+        score = val_loss
         if self.best_score is None:
             self.best_score = score
             self.best_model_state = model.state_dict()
             self.best_model = model
             self.best_epoch = epoch
-        elif score < self.best_score + self.delta:
+        elif score > self.best_score + self.delta:
             self.counter += 1
             if self.counter >= self.patience:
                 self.early_stop = True
@@ -60,9 +60,9 @@ class EarlyStopping:
         """
         return model.load_state_dict(self.best_model_state)
     
-    def get_best_model(self) -> tuple[Union[CNNAutoEncoder],int]:
+    def get_best_model(self) -> tuple[Union[CNNAutoEncoder],int,int]:
         """
         :return self.best_model: best model during training
         :return self.best_epoch: best epoch
         """
-        return self.best_model, self.best_epoch
+        return self.best_model, self.best_epoch, self.best_score

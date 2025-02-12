@@ -103,9 +103,13 @@ if __name__ == "__main__":
     os.makedirs(args.out_dir, exist_ok=True)
     assert args.train_dir.exists() and args.val_dir.exists() and args.test_dir.exists(), 'One of the data directories does not exists'
 
-    name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}_{args.penalty_scheduler}_weightpenalty{int(args.weight_penalty)}'
+    name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
     if args.alpha is not None:
         name_str += f'_a{args.alpha}'
+    if args.weight_penalty:
+        name_str += '_weightpenalty'
+    if args.update:
+        name_str += f'_{args.penalty_scheduler}'
     if args.early_stop:
         name_str += f'_earlystop'
     save_path = args.out_dir / name_str
@@ -117,7 +121,6 @@ if __name__ == "__main__":
     if args.update and not args.early_stop:
             args.alpha_epochs = args.epochs #if you're updating but not early stopping, assumes it is updating for the entire epoch, so alpha epochs and epochs should be equivalent
 
-    
     # LOAD FEATURES
     if args.bucket is not None:
         cci_features = cc.get_interface(args.bucket, verbose=False)
