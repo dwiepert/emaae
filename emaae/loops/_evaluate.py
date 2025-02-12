@@ -41,7 +41,13 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     norms = []
     for w in weights:
         norms.append(float(fro_norm3d(w.cpu().numpy())))
-
+    
+    if encode:
+        epath = save_path /'encodings'
+        epath.mkdir(exist_ok=True)
+    if decode:
+        dpath = save_path /'decodings'
+        dpath.mkdir(exist_ok=True)
     # EVALUATION LOOP    
     with torch.no_grad():
         for data in tqdm(test_loader):
@@ -49,20 +55,17 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             encoded = model.encode(inputs)
             
             # SAVE ENCODINGS
+            fname = data['files'][0]
             if encode:
-                epath = save_path /'encodings'
-                epath.mkdir(exist_ok=True)
-                fname = data['files'][0]
-
                 torch.save(encoded.cpu(),epath/f'{fname}_encoding.pt')
+                print('saved')
             
             outputs = model.decode(encoded) 
 
             if decode:
-                dpath = save_path /'decodings'
-                dpath.mkdir(exist_ok=True)
-                fname = data['files'][0]
+                print(fname)
                 torch.save(outputs.cpu(),dpath/f'{fname}_decoding.pt')
+                print(f'saved to {dpath}')
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
