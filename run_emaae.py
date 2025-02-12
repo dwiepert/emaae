@@ -186,4 +186,30 @@ if __name__ == "__main__":
         torch.save(model.state_dict(), str(save_path / f'{model.get_type()}.pth'))
     
     #Evaluate
+
+    if args.eval_only:
+        lr = model_config['lr']
+        epochs = model_config['epochs']
+        batch_sz = model_config['batch_sz']
+        optimizer = model_config['optimizer']
+        al = model_config['autoencoder_loss']
+        sl = model_config['sparse_loss']
+        name_str =  f'model_lr{lr}e{epochs}bs{batch_sz}_{optimizer}_{al}_{sl}'
+        alpha = model_config['alpha']
+        if alpha is not None:
+            name_str += f'_a{alpha}'
+        wp = model_config['weight_penalty']
+        if wp:
+            name_str += '_weightpenalty'
+        update =  model_config['update']
+        if update:
+            ps =  model_config['penalty_scheduler']
+            name_str += f'_{ps}'
+        es = model_config['early_stop']
+        if es:
+            name_str += f'_earlystop'
+        save_path = args.out_dir / name_str
+        
+    os.makedirs(save_path, exist_ok=True)
+    print('Saving results to:', save_path)
     metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device, encode=args.encode, decode=args.decode)
