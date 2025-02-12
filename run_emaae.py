@@ -165,7 +165,7 @@ if __name__ == "__main__":
         raise NotImplementedError(f'{args.model_type} not implemented.')
     
     if args.checkpoint is not None:
-        model = model.load_state_dict(torch.load(args.checkpoint))
+        model = model.load_state_dict(torch.load(args.checkpoint, weights_only=True))
     model = model.to(device)
 
 
