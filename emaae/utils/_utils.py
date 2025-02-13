@@ -43,7 +43,7 @@ def fro_norm3d_list(mat_list:List[np.ndarray]) -> float:
     return np.sqrt(np.sum(sq_norms))
 
 
-def calc_sparsity(encoding:np.ndarry):
+def calc_sparsity(encoding:np.ndarray):
     """
     Calculate proportion of 0s in an encoding
     :param encoding: numpy array of encoding
