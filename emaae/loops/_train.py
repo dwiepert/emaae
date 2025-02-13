@@ -115,7 +115,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             loss = criterion(decoded=outputs, dec_target=inputs, encoded=encoding, enc_target=enc_target,weights=weights)
             loss.backward()
             running_loss += loss.item()
-            running_sparsity += calc_sparsity(encoding.cpu().numpy())
+            running_sparsity += calc_sparsity(encoding.detach().cpu().numpy())
 
             # UPDATE
             optim.step()
@@ -164,7 +164,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 # LOSS
                 vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
                 running_vloss += vloss.item()
-                running_vsparsity += calc_sparsity(vencoding.cpu().numpy())
+                running_vsparsity += calc_sparsity(vencoding.detach().cpu().numpy())
             
         # VALIDATION LOG
         avg_vloss = running_vloss / len(val_loader)
