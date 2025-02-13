@@ -6,9 +6,10 @@ Last modified: 02/13/2025
 """
 # IMPORTS
 ##built-in
-from typing import List
+from typing import List, Union
 ##third-party
 import numpy as np
+import torch
 
 def fro_norm3d(mat:np.ndarray) -> float:
     """
@@ -43,12 +44,18 @@ def fro_norm3d_list(mat_list:List[np.ndarray]) -> float:
     return np.sqrt(np.sum(sq_norms))
 
 
-def calc_sparsity(encoding:np.ndarray):
+def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
     """
     Calculate proportion of 0s in an encoding
     :param encoding: numpy array of encoding
     :return sparsity: calculated sparsity
     """
-    zero_count = np.count_nonzero(encoding==0)
-    sparsity = zero_count/np.size(encoding)
+    if isinstance(encoding, np.ndarray):
+        zero_count = np.count_nonzero(encoding==0)
+        sparsity = zero_count/np.size(encoding)
+    else:
+        te = torch.numel(encoding)
+        nz = torch.count_nonzero(encoding)
+        sparsity = (te-nz)/nz
+        sparsity = sparsity.item()
     return sparsity

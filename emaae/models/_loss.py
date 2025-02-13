@@ -94,7 +94,7 @@ class SparseLoss(nn.Module):
         self.track_alpha.append(self.alpha)
         self.track_loss1.append(loss1.item())
         self.track_loss2.append(loss2.item())
-        self.track_sparsity.append(calc_sparsity(encoded.detach().cpu().numpy()))
+        self.track_sparsity.append(calc_sparsity(encoded))
 
         if self.weight_penalty:
             penalty = self._weight_norm(weights)

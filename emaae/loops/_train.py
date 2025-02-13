@@ -91,7 +91,6 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         model.train(True)
         running_loss = 0.
-        running_sparsity = 0.
         
         # TRAINING LOOP
         for data in tqdm(train_loader):
@@ -115,17 +114,14 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             loss = criterion(decoded=outputs, dec_target=inputs, encoded=encoding, enc_target=enc_target,weights=weights)
             loss.backward()
             running_loss += loss.item()
-            running_sparsity += calc_sparsity(encoding.detach().cpu().numpy())
-
+        
             # UPDATE
             optim.step()
 
         # TRAINING LOG
         avg_loss = running_loss / len(train_loader)
-        avg_sparsity = running_sparsity /len(train_loader)
         log = criterion.get_log()
         log['avg_loss'] = avg_loss
-        log['avg_sparsity'] = avg_sparsity
         log['epoch'] = e
 
         with open(str(lpath / f'trainlog{e}.json'), 'w') as f:
@@ -138,11 +134,10 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         #if e==0 or e % 1 == 0:
         eet = time.time() # epoch ending time
         print(f'Average loss at Epoch {e}: {avg_loss}')
-        #print(f'Epoch {e} run time: {(eet-est)/60}')
+        print(f'Epoch {e} run time: {(eet-est)/60}')
 
         model.eval()
         running_vloss=0.0
-        running_vsparsity = 0
         if weight_penalty:
             vweights = model.get_weights()
         else:
@@ -164,14 +159,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 # LOSS
                 vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
                 running_vloss += vloss.item()
-                running_vsparsity += calc_sparsity(vencoding.detach().cpu().numpy())
             
         # VALIDATION LOG
         avg_vloss = running_vloss / len(val_loader)
-        avg_vsparsity = running_vsparsity /len(val_loader)
         vlog = criterion.get_log()
         vlog['avg_loss'] = avg_vloss
-        vlog['avg_vsparsity'] = avg_vsparsity
         vlog['epoch'] = e
         
         with open(str(lpath / f'vallog{e}.json'), 'w') as f:
