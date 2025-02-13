@@ -141,7 +141,7 @@ class CNNAutoEncoder(nn.Module):
             if (n == (len((params['in_size'])) - 1)) and not exclude_final_relu:
                 block['relu'] = nn.ReLU()
             sequence[f'block{n}'] = nn.Sequential(block)
-        print(sequence)
+        #print(sequence)
         return nn.Sequential(sequence)
 
     def encode(self, x:torch.Tensor) -> torch.Tensor:
