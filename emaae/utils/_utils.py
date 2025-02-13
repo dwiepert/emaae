@@ -54,7 +54,6 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
         zero_count = np.count_nonzero(encoding==0)
         sparsity = zero_count/np.size(encoding)
     else:
-        print('TORCH')
         te = torch.numel(encoding)
         nz = torch.count_nonzero(encoding)
         sparsity = (te-nz)/te
