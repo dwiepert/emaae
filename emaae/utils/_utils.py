@@ -50,5 +50,5 @@ def calc_sparsity(encoding:np.ndarray):
     :return sparsity: calculated sparsity
     """
     zero_count = np.count_nonzero(encoding==0)
-    sparsity = zero_count/np.size
+    sparsity = zero_count/np.size(encoding)
     return sparsity
