@@ -2,7 +2,7 @@
 Some util functions for this package
 
 Author(s): Daniela Wiepert
-Last modified: 02/10/2025
+Last modified: 02/13/2025
 """
 # IMPORTS
 ##built-in
@@ -42,3 +42,13 @@ def fro_norm3d_list(mat_list:List[np.ndarray]) -> float:
     
     return np.sqrt(np.sum(sq_norms))
 
+
+def calc_sparsity(encoding:np.ndarry):
+    """
+    Calculate proportion of 0s in an encoding
+    :param encoding: numpy array of encoding
+    :return sparsity: calculated sparsity
+    """
+    zero_count = np.count_nonzero(encoding==0)
+    sparsity = zero_count/np.size
+    return sparsity

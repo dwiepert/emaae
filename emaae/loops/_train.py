@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
+from emaae.utils import calc_sparsity
 
 def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
@@ -86,6 +87,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         model.train(True)
         running_loss = 0.
+        running_sparsity = 0.
         
         # TRAINING LOOP
         for data in tqdm(train_loader):
@@ -109,14 +111,17 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             loss = criterion(decoded=outputs, dec_target=inputs, encoded=encoding, enc_target=enc_target,weights=weights)
             loss.backward()
             running_loss += loss.item()
+            running_sparsity += calc_sparsity(encoding.cpu().numpy())
 
             # UPDATE
             optim.step()
 
         # TRAINING LOG
         avg_loss = running_loss / len(train_loader)
+        avg_sparsity = running_sparsity /len(train_loader)
         log = criterion.get_log()
         log['avg_loss'] = avg_loss
+        log['avg_sparsity'] = avg_sparsity
         log['epoch'] = e
 
         with open(str(save_path / f'trainlog{e}.json'), 'w') as f:
@@ -129,10 +134,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         #if e==0 or e % 1 == 0:
         eet = time.time() # epoch ending time
         print(f'Average loss at Epoch {e}: {avg_loss}')
-        print(f'Epoch {e} run time: {(eet-est)/60}')
+        #print(f'Epoch {e} run time: {(eet-est)/60}')
 
         model.eval()
         running_vloss=0.0
+        running_vsparsity = 0
         if weight_penalty:
             vweights = model.get_weights()
         else:
@@ -154,11 +160,14 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 # LOSS
                 vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
                 running_vloss += vloss.item()
+                running_vsparsity += calc_sparsity(vencoding.cpu().numpy())
             
         # VALIDATION LOG
         avg_vloss = running_vloss / len(val_loader)
+        avg_vsparsity = running_vsparsity /len(val_loader)
         vlog = criterion.get_log()
         vlog['avg_loss'] = avg_vloss
+        vlog['avg_vsparsity'] = avg_vsparsity
         vlog['epoch'] = e
         
         with open(str(save_path / f'vallog{e}.json'), 'w') as f:
@@ -182,6 +191,10 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
+        if (e+1 == 0) or (e+1 % 5) == 0:
+            path = save_path / f'{model.get_type()}_e{e+1}.pth'
+            if not path.exists():
+                torch.save(model.state_dict(), str(path))
         # CHANGE ALPHA
         # CASE 1: if model has stopped training early and update is True, will run for alpha_epochs
         # CASE 2: no early stopping, update is True, will run for epochs (ideally only do this if model is already trained)
@@ -199,7 +212,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         best_model,best_epoch, best_score = early_stopping.get_best_model()
         print(f'Best epoch: {best_epoch}')
         print(f'Best score: {best_score}')
-        path = save_path / f'{best_model.get_type()}_bestmodel_e{best_epoch}.pth'
+        path = save_path / f'{best_model.get_type()}_bestmodel_e{best_epoch+1}.pth'
         if not path.exists():
             torch.save(best_model.state_dict(), str(path))
         return best_model

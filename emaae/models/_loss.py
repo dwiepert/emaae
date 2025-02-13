@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 ##local
 from ._scheduler import StepAlpha
-from emaae.utils import fro_norm3d_list
+from emaae.utils import fro_norm3d_list, calc_sparsity
 
 class SparseLoss(nn.Module):
     """
@@ -50,6 +50,7 @@ class SparseLoss(nn.Module):
 
         self.track_loss1 = []
         self.track_loss2 = []
+        self.track_sparsity = []
         self.track_alpha = []
 
         self.weight_penalty = weight_penalty
@@ -93,6 +94,7 @@ class SparseLoss(nn.Module):
         self.track_alpha.append(self.alpha)
         self.track_loss1.append(loss1.item())
         self.track_loss2.append(loss2.item())
+        self.track_sparsity.append(calc_sparsity(encoded.cpu().numpy()))
 
         if self.weight_penalty:
             penalty = self._weight_norm(weights)
@@ -108,7 +110,7 @@ class SparseLoss(nn.Module):
 
         :return log: Dictionary of tracked loss values
         """
-        log = {'alpha':self.track_alpha, self.loss1_type:self.track_loss1, self.loss2_type:self.track_loss2}
+        log = {'alpha':self.track_alpha, self.loss1_type:self.track_loss1, self.loss2_type:self.track_loss2, 'sparsity':self.track_sparsity}
         
         if self.weight_penalty:
             log['weight_penalty'] = self.track_weight
@@ -121,6 +123,7 @@ class SparseLoss(nn.Module):
         self.track_loss1 = []
         self.track_loss2 = []
         self.track_alpha = []
+        self.track_sparsity = []
 
         if self.weight_penalty:
             self.track_weight = []

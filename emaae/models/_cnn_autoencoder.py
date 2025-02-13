@@ -40,7 +40,7 @@ class CNNAutoEncoder(nn.Module):
 
         self.encoder_params = self._encoder_block_options()
         self.decoder_params = self._decoder_block_options()
-        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params)), ('decoder',self._generate_sequence(params=self.decoder_params)) ]))
+        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_relu=False)), ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_relu=True)) ]))
 
     def _encoder_block_options(self):
         """
@@ -124,11 +124,12 @@ class CNNAutoEncoder(nn.Module):
                       'kernel_size':[5,3,3]}
 
 
-    def _generate_sequence(self, params:Dict[str, List[int]]) -> nn.Sequential:
+    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_relu:bool=False) -> nn.Sequential:
         """
         Generate a sequence of layers
 
-        :param params:
+        :param params: dictionary of model parameters
+        :param exclude_final_relu: boolean, indicate whether to exclude the final relu layer
         :return: nn.Sequential layers
         """
         sequence = OrderedDict()
@@ -137,9 +138,10 @@ class CNNAutoEncoder(nn.Module):
             block = OrderedDict()
             block['batchnorm'] = nn.BatchNorm1d(num_features=params['in_size'][n])
             block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
-            block['relu'] = nn.ReLU()
+            if (n == (len((params['in_size'])) - 1)) and not exclude_final_relu:
+                block['relu'] = nn.ReLU()
             sequence[f'block{n}'] = nn.Sequential(block)
-            
+        print(sequence)
         return nn.Sequential(sequence)
 
     def encode(self, x:torch.Tensor) -> torch.Tensor:

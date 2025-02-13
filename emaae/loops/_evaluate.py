@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
-from emaae.utils import fro_norm3d
+from emaae.utils import fro_norm3d, calc_sparsity
 
 def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, encode:bool=True, decode:bool=True) -> Dict[str,List[float]]:
     """
@@ -71,7 +71,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             mse.append(mean_squared_error(targets, outputs))
             
             encoded = np.squeeze(encoded.cpu().numpy())
-            sparsity.append(np.count_nonzero(encoded==0))
+            sparsity.append(calc_sparsity(encoded))
     
     # SAVE METRICS
     metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms}
