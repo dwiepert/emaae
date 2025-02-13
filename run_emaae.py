@@ -117,7 +117,7 @@ if __name__ == "__main__":
     if args.early_stop:
         name_str += f'_earlystop'
     save_path = args.out_dir / name_str
-    os.makedirs(save_path, exist_ok=True)
+    save_path.mkdir(exist_ok=True)
     print('Saving results to:', save_path)
 
     # PREP VARIABLES
@@ -183,7 +183,9 @@ if __name__ == "__main__":
                       early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty)
         
         #SAVE FINAL TRAINED MODEL
-        torch.save(model.state_dict(), str(save_path / f'{model.get_type()}.pth'))
+        mpath = save_path / 'models'
+        mpath.mkdir(exist_ok=True)
+        torch.save(model.state_dict(), str(mpath / f'{model.get_type()}_final.pth'))
     
     #Evaluate
 
@@ -209,7 +211,7 @@ if __name__ == "__main__":
         if es:
             name_str += f'_earlystop'
         save_path = args.out_dir / name_str
-
-    os.makedirs(save_path, exist_ok=True)
+        save_path.mkdir(exist_ok=True)
+       
     print('Saving results to:', save_path)
     metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device, encode=args.encode, decode=args.decode)

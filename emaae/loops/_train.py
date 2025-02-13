@@ -72,7 +72,11 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :return model: trained autoencoder model
     """
 
-    os.makedirs(save_path, exist_ok=True)
+    mpath = save_path / 'models'
+    mpath.mkdir(exist_ok=True)
+    lpath = save_path / 'logs'
+    lpath.mkdir(exist_ok=True)
+
     early_stopping = EarlyStopping(patience=patience)
     start_time = time.time() #model start time
     alpha_update = False
@@ -124,7 +128,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         log['avg_sparsity'] = avg_sparsity
         log['epoch'] = e
 
-        with open(str(save_path / f'trainlog{e}.json'), 'w') as f:
+        with open(str(lpath / f'trainlog{e}.json'), 'w') as f:
             json.dump(log, f)
 
         criterion.clear_log()
@@ -170,7 +174,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         vlog['avg_vsparsity'] = avg_vsparsity
         vlog['epoch'] = e
         
-        with open(str(save_path / f'vallog{e}.json'), 'w') as f:
+        with open(str(lpath / f'vallog{e}.json'), 'w') as f:
             json.dump(vlog, f)
         
         criterion.clear_log()
@@ -182,7 +186,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             if early_stopping.early_stop and not alpha_update:
                 print("Early stopping. Switching to alpha update.") 
                 best_model,best_epoch = early_stopping.get_best_model()
-                torch.save(best_model.state_dict(), str(save_path / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
+                torch.save(best_model.state_dict(), str(mpath / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
                 if update:
                     alpha_update=True
                     new_epoch_counter = 0
@@ -192,7 +196,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
         if (e+1 == 0) or (e+1 % 5) == 0:
-            path = save_path / f'{model.get_type()}_e{e+1}.pth'
+            path = mpath / f'{model.get_type()}_e{e+1}.pth'
             if not path.exists():
                 torch.save(model.state_dict(), str(path))
         # CHANGE ALPHA
@@ -212,7 +216,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         best_model,best_epoch, best_score = early_stopping.get_best_model()
         print(f'Best epoch: {best_epoch}')
         print(f'Best score: {best_score}')
-        path = save_path / f'{best_model.get_type()}_bestmodel_e{best_epoch+1}.pth'
+        path = mpath / f'{best_model.get_type()}_bestmodel_e{best_epoch+1}.pth'
         if not path.exists():
             torch.save(best_model.state_dict(), str(path))
         return best_model
