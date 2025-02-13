@@ -187,7 +187,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
-        if (e == 0) or (e+1 % 5) == 0:
+        if (e == 0) or ((e+1) % 5 == 0):
             print('Saving epoch...')
             path = mpath / f'{model.get_type()}_e{e+1}.pth'
             torch.save(model.state_dict(), str(path))
@@ -209,8 +209,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         print(f'Best epoch: {best_epoch}')
         print(f'Best score: {best_score}')
         path = mpath / f'{best_model.get_type()}_bestmodel_e{best_epoch+1}.pth'
-        if not path.exists():
-            torch.save(best_model.state_dict(), str(path))
+        torch.save(best_model.state_dict(), str(path))
         return best_model
 
     print(f'Model trained in {(end_time-start_time)/60} minutes.')
