@@ -187,10 +187,10 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
-        if (e+1 == 0) or (e+1 % 5) == 0:
+        if (e == 0) or (e+1 % 5) == 0:
+            print('Saving epoch...')
             path = mpath / f'{model.get_type()}_e{e+1}.pth'
-            if not path.exists():
-                torch.save(model.state_dict(), str(path))
+            torch.save(model.state_dict(), str(path))
         # CHANGE ALPHA
         # CASE 1: if model has stopped training early and update is True, will run for alpha_epochs
         # CASE 2: no early stopping, update is True, will run for epochs (ideally only do this if model is already trained)
