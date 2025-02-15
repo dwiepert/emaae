@@ -57,13 +57,13 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             # SAVE ENCODINGS
             fname = data['files'][0]
             if encode:
-                torch.save(encoded.cpu(),epath/f'{fname}_encoding.pt')
+                torch.save(encoded.cpu(),epath/f'{fname}.pt')
             
             outputs = model.decode(encoded) 
 
             if decode:
                 #print(fname)
-                torch.save(outputs.cpu(),dpath/f'{fname}_decoding.pt')
+                torch.save(outputs.cpu(),dpath/f'{fname}.pt')
                 #print(f'saved to {dpath}')
 
             targets = np.squeeze(inputs.cpu().numpy())

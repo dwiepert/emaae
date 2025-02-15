@@ -10,3 +10,5 @@ runs.txt
 Analysis.Rmd
 Analysis.nb.html
 .Rhistory
+/build
+/emaae.py.egg-info
