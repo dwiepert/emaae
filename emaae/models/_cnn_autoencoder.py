@@ -156,11 +156,11 @@ class CNNAutoEncoder(nn.Module):
             elif (n < len(params['in_size']) - 1) or not exclude_final_relu:
                 #case 2 - we are either not at the final layer OR we aren't excluding final relu (that is, we're building the encoder)
                 if batchnorm_first:
-                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['in_size'][n])
+                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
 
                 block['relu'] = nn.ReLU()
                 if not batchnorm_first:
-                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['in_size'][n])
+                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
             
             sequence[f'block{n}'] = nn.Sequential(block)
         print(sequence)
