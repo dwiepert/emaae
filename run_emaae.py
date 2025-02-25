@@ -58,9 +58,9 @@ if __name__ == "__main__":
                                 help='Number of encoder blocks to use in model.')
     model_args.add_argument('--n_decoder', type=int, default=3, 
                                 help='Number of decoder blocks to use in model.')
-    model_args.add_argument('--batchnorm_first', action='store_true'
+    model_args.add_argument('--batchnorm_first', action='store_true',
                                 help='Indicate whether to use batchnorm before or after nonlinearity.')
-    model_args.add_argument('--final_tanh', action='store_true'
+    model_args.add_argument('--final_tanh', action='store_true',
                                 help='Indicate whether to use tanh activation as final part of decoder.')
     model_args.add_argument('--checkpoint', type=str, default=None, 
                                 help='Checkpoint name of full path to model checkpoint.')
