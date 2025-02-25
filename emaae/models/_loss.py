@@ -40,7 +40,7 @@ class SparseLoss(nn.Module):
         self.loss2_type = loss2_type.lower()
         if self.loss2_type == 'l1':
             self.loss2 = nn.L1Loss()
-        if self.loss2_type = 'tvl2'
+        if self.loss2_type == 'tvl2'
             self.loss2 = self._tvl2()
         else:
             raise NotImplementedError(f'{self.loss2_type} is not an implemented sparsity loss function.')
