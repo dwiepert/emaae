@@ -48,15 +48,16 @@ print(f'Avg kurtosis: {np.mean(k)}')
 print(f'Avg kurtosis baseline: {np.mean(baseline_k)}')
 encodings_cat = np.concatenate(encodings_flattened)
 #TRY
-encodings_cat = np.log(encodings_cat[encodings_cat != 0])
+#encodings_cat = np.log(encodings_cat[encodings_cat != 0])
 
 #logbins = np.geomspace(encodings_cat.min(), encodings_cat.max(),10plt.figure(figsize=(8, 6))
-#plt.hist(encodings_cat, bins=100)
+plt.hist(encodings_cat, bins=100, log=True)
 #plt.xscale('log')
-#plt.title('Log distribution of activations')
-#plt.show()
-#plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/activations_dist.png')
-#plt.clf()
+plt.title('Log distribution of activations')
+plt.ylabel('Frequency')
+plt.show()
+plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/activations_dist.png')
+plt.clf()
 
 
 #TRY
@@ -64,18 +65,23 @@ encodings_cat = np.log(encodings_cat[encodings_cat != 0])
 e = np.squeeze(encodings[100])
 plt.figure(figsize=(5,5))
 plt.imshow(e)
+plt.ylabel('Encoding dimension')
+plt.xlabel('Time')
 plt.show()
 plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/visualization1.png')
 plt.clf()
 
 plt.spy(e)
+plt.ylabel('Encoding dimension')
+plt.xlabel('Time')
 plt.show()
 plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/visualization2.png')
 plt.clf()
 
 for i in range(e.shape[0]):
     plt.plot(e[i,:])
-
+plt.ylabel('Activation')
+plt.xlabel('Time')
 plt.show()
 plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/visualization3.png')
 

@@ -19,13 +19,14 @@ from tqdm import tqdm
 from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
 from emaae.utils import calc_sparsity
 
-def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0.0001, 
+def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
                  penalty_scheduler:str='step', **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
     """
     Set up optimizer and and loss functions
 
     :param model: initialized model class (for getting parameters)
+    :param device: device to send tensors to
     :param optim_type: str, type of optimizer to initialize (default = adamw)
     :param lr: float, learning rate (default = 0.0001)
     :param loss1_type: str, basic autoencoder loss type (default = mse)
@@ -47,7 +48,7 @@ def set_up_train(model:Union[CNNAutoEncoder], optim_type:str='adamw', lr:float=0
         return NotImplementedError(f'{optim_type} not implemented.')
 
     # SET UP LOSS
-    loss_fn = SparseLoss(loss1_type=loss1_type, loss2_type=loss2_type, alpha=alpha,
+    loss_fn = SparseLoss(device=device, loss1_type=loss1_type, loss2_type=loss2_type, alpha=alpha,
                           weight_penalty=weight_penalty, penalty_scheduler=penalty_scheduler, **kwargs)
 
     return optim, loss_fn
@@ -99,8 +100,6 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
             # ENCODE
             encoding = model.encode(inputs)
-            enc_target = torch.zeros(encoding.shape)
-            enc_target = enc_target.to(device)
 
             # DECODE
             outputs = model.decode(encoding)
@@ -111,7 +110,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             else:
                 weights = None
 
-            loss = criterion(decoded=outputs, dec_target=inputs, encoded=encoding, enc_target=enc_target,weights=weights)
+            loss = criterion(decoded=outputs, dec_target=inputs, encoded=encoding, weights=weights)
             loss.backward()
             running_loss += loss.item()
         
@@ -150,14 +149,12 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
                 # ENCODE
                 vencoding = model.encode(vinputs)
-                venc_target = torch.zeros(vencoding.shape)
-                venc_target = venc_target.to(device)
 
                 # DECODE 
                 voutputs = model.decode(vencoding)
 
                 # LOSS
-                vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding,enc_target=venc_target, weights=vweights)
+                vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding, weights=vweights)
                 running_vloss += vloss.item()
             
         # VALIDATION LOG

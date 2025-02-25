@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Union, Dict, List
 ##third party
 import numpy as np
+from scipy.signal import welch
 from sklearn.metrics import mean_squared_error
 import torch
 from torch.utils.data import DataLoader
@@ -33,7 +34,11 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     """
     save_path = Path(save_path)
     mse = []
+    psd_mse = {}
     sparsity = []
+    encodings = []
+    freqs = []
+    psds = []
     model.eval()
 
     # LOOK AT WEIGHTS
@@ -59,8 +64,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             if encode:
                 torch.save(encoded.cpu(),epath/f'{fname}.pt')
             
-            outputs = model.decode(encoded) 
-
             if decode:
                 #print(fname)
                 torch.save(outputs.cpu(),dpath/f'{fname}.pt')
@@ -71,8 +74,16 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             mse.append(mean_squared_error(targets, outputs))
             
             encoded = np.squeeze(encoded.cpu().numpy())
+            encodings.append(encoded)
             sparsity.append(calc_sparsity(encoded))
+
+            ### PSD and low pass filtering 
+            #frequencies, psd = welch(encoded, 50)
+            #freqs.append(frequencies)
+            #psd.append(psd)
     
+
+
     # SAVE METRICS
     metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms}
     with open(str(save_path /'metrics.json'), 'w') as f:
@@ -81,3 +92,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     return metrics
 
 
+def low_pass(encoded:np.ndarray, frequencies, psd, sampling_rate:int=50, cutoff_frequency:int=10):
+    """
+    """

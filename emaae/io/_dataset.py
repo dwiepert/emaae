@@ -52,6 +52,7 @@ class EMADataset(Dataset):
     :param cci_features: cc interface (default = None)
     """
     def __init__(self, root_dir:Union[str,Path], recursive:bool=False, cci_features=None):
+        super().__init__()
         self.root_dir = root_dir
         self.cci_features = cci_features
         self.recursive=recursive

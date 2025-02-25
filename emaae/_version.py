@@ -1,4 +1,4 @@
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 #change log:
 # 0.0.0: initialized repo
@@ -10,3 +10,4 @@ __version__ = '0.3.2'
 # 0.3.0: Updated model/loss/scheduler + Documentation updates
 # 0.3.1: debugging
 # 0.3.2: model fix, new sparsity calculation
+# 0.3.3: initial attempts at TVL2 loss

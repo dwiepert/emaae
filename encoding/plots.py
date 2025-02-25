@@ -53,20 +53,44 @@ for i in range(len(files)):
         print(f'{i}/{len(files)}')
     orig = test_feats[files[i]]
     orig = orig[:,mask]
+    #omin = np.min(orig, axis=0)
+    #omax = np.max(orig, axis=0)
+    #orig = np.divide(np.subtract(orig, omin), np.subtract(omax,omin))
     pred = rfeats[files[i]]
+    
+    #pmin = np.min(pred, axis=0)
+    #pmax = np.max(pred, axis=0)
+    #pred = np.divide(np.subtract(pred, pmin), np.subtract(pmax,pmin))
+    
     if i < 1:
         print('pause')
-        orig = test_feats[files[i]]
-        orig = orig[:,mask]
-        pred = rfeats[files[i]]
+        #orig = test_feats[files[i]]
+        #pred = rfeats[files[i]]
 
+        rlist = np.arange(13)*5
+        orig2 = np.add(orig, rlist) 
+        pred2 = np.add(pred, rlist) 
+        
         #figure, axis = plt.subplots(13,1)
-        plt.plot(list(range(orig.shape[0])), orig[:,1], label='Original')
-        plt.plot(list(range(orig.shape[0])), pred[:,1], label='Reconstructed')
-        plt.legend()
-        plt.show()
+
+
+        plt.plot(list(range(orig.shape[0])), orig2[:,:12], label='Original')
+        plt.plot(list(range(orig.shape[0])), pred2[:,:12], label='Reconstructed')
+        plt.yticks([])
+        plt.xlabel('Time')
         plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/reconstructed_ema.png')
-    
+        plt.clf()
+
+        plt.plot(list(range(orig.shape[0])), orig[:,12], label='Original')
+        plt.plot(list(range(orig.shape[0])), pred[:,12], label='Reconstructed')
+        plt.yticks([])
+        plt.xlabel('Time')
+        plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/reconstructed_pitch.png')
+        plt.clf()
+
+
+        print('pause')
+
     for j in range(orig.shape[0]):
         zero_inds = np.where(pred[j,:])
         mask_zeros = np.ones(orig.shape[1],dtype=bool)

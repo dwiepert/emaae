@@ -26,9 +26,10 @@ class SparseLoss(nn.Module):
     :param penalty_scheduler: str, scheduler type for updating alpha (default='step')
     :param **kwargs: additional penalty scheduler parameters
     """
-    def __init__(self, loss1_type:str='mse',loss2_type:str='l1',alpha:float=0.25,
+    def __init__(self, device, loss1_type:str='mse',loss2_type:str='l1',alpha:float=0.25,
                  weight_penalty:bool=False, penalty_scheduler:str='step', **kwargs):
         super(SparseLoss, self).__init__()
+        self.device = device
         self.alpha = alpha
         self.loss1_type = loss1_type.lower()
         if self.loss1_type == 'mse':
@@ -39,6 +40,8 @@ class SparseLoss(nn.Module):
         self.loss2_type = loss2_type.lower()
         if self.loss2_type == 'l1':
             self.loss2 = nn.L1Loss()
+        if self.loss2_type = 'tvl2'
+            self.loss2 = self._tvl2()
         else:
             raise NotImplementedError(f'{self.loss2_type} is not an implemented sparsity loss function.')
         
@@ -56,6 +59,13 @@ class SparseLoss(nn.Module):
         self.weight_penalty = weight_penalty
         if self.weight_penalty:
             self.track_weight= []
+
+    def _tvl2(self, encoded:torch.Tensor, enc_target:torch.Tensor) -> float:
+        """
+        Total variation loss L2 (sum of squares of the gradient)
+        """
+        loss = torch.sum(torch.square(torch.sub(encoded, enc_target)))
+        return loss
 
     def step(self) -> None:
         """
@@ -75,19 +85,27 @@ class SparseLoss(nn.Module):
 
     
     def forward(self, decoded:torch.Tensor, dec_target:torch.Tensor, 
-                encoded:torch.Tensor, enc_target:torch.Tensor, weights:Optional[List[torch.Tensor]]=None) -> float:
+                encoded:torch.Tensor, weights:Optional[List[torch.Tensor]]=None) -> float:
         """
         Calculate loss and add to log
 
-        :param decoding: torch.Tensor, model output after decoding
+        :param decoding: torch.Tensor, model output after decoding (batch_size, feature_dim, time)
         :param dec_target: torch.Tensor, target decoding
-        :param encoded: torch.Tensor, model output after encoding
-        :param enc_target: torch.Tensor, target encoding (SHOULD BE A TENSOR OF ALL 0s FOR SPARSITY)
+        :param encoded: torch.Tensor, model output after encoding (batch_size, encoding_dim, time)
         :param weights: optionally give list of torch.Tensors of all convolutional layer weights
+        :param device: to send
         :return total_loss: calculated loss
         """
         loss1 = self.loss1(decoded, dec_target)
-        loss2 = self.loss2(encoded, enc_target)
+
+        ## DEALING WITH LOSS2
+        if self.loss2_type == 'l1':
+            enc_target = torch.zeros(encoded.shape)
+        elif self.loss2_type == 'tvl2':
+            enc_target = torch.roll(encoded, shifts=1, dims=1)
+        enc_target.to(self.device)
+
+        loss2 = self.loss2(encoded, enc_target) 
 
         total_loss = (1-self.alpha)*loss1 + self.alpha*loss2
 

@@ -58,6 +58,10 @@ if __name__ == "__main__":
                                 help='Number of encoder blocks to use in model.')
     model_args.add_argument('--n_decoder', type=int, default=3, 
                                 help='Number of decoder blocks to use in model.')
+    model_args.add_argument('--batchnorm_first', action='store_true'
+                                help='Indicate whether to use batchnorm before or after nonlinearity.')
+    model_args.add_argument('--final_tanh', action='store_true'
+                                help='Indicate whether to use tanh activation as final part of decoder.')
     model_args.add_argument('--checkpoint', type=str, default=None, 
                                 help='Checkpoint name of full path to model checkpoint.')
     ##train args
@@ -78,8 +82,8 @@ if __name__ == "__main__":
                                 help='Type of optimizer to use for training.')
     train_args.add_argument('--autoencoder_loss', type=str, default='mse',
                                 help='Specify base autoencoder loss type.')
-    train_args.add_argument('--sparse_loss', type=str, default='l1',
-                                help='Specify sparsity loss type.')
+    train_args.add_argument('--sparse_loss', type=str, default='tvl2',
+                                help='Specify sparsity loss type [l1, tvl2].')
     train_args.add_argument('--weight_penalty', action='store_true',
                                 help='Specify whether to add a penalty based on model weights.')
     train_args.add_argument('--alpha', type=float, default=0.25,
@@ -116,6 +120,10 @@ if __name__ == "__main__":
         name_str += f'_{args.penalty_scheduler}'
     if args.early_stop:
         name_str += f'_earlystop'
+    if args.batchnorm_first:
+        name_str += f'_bnf'
+    if args.final_tanh:
+        name_str += f'_tanh'
     save_path = args.out_dir / name_str
     save_path.mkdir(exist_ok=True)
     print('Saving results to:', save_path)
@@ -153,14 +161,15 @@ if __name__ == "__main__":
     else:
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
-                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 'patience':args.patience}
+                        'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
+                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh}
 
         with open(str(save_path/'model_config.json'), 'w') as f:
             json.dump(model_config,f)
 
     # INITIALIZE MODEL / LOAD CHECKPOINT IF NECESSARY
     if args.model_type=='cnn':
-        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'])
+        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'])
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
     
@@ -173,7 +182,7 @@ if __name__ == "__main__":
 
 
     if not args.eval_only:
-        optim, criterion = set_up_train(model=model, optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss,
+        optim, criterion = set_up_train(model=model, device =device, optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss,
                                         loss2_type=args.sparse_loss, alpha=args.alpha, weight_penalty=args.weight_penalty,
                                         penalty_scheduler=args.penalty_scheduler, epochs=args.alpha_epochs)
 

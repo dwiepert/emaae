@@ -43,6 +43,8 @@ Model initialization arguments:
 * --inner_size: dimension of encoded representations (OPTIONS = [1024, 768])
 * --n_encoder: number of encoder blocks (OPTIONS = 2-5)
 * --n_decoder: number of decoder blocks (OPTIONS = 2-5)
+* --batchnorm_first: indicate whether batchnorm layer comes before non-linearity
+* --final_tanh: indicate whether to add a tanh activation at final decoder layer
 * --checkpoint: checkpoint path or name of checkpoint, expecting a .pth file containing the saved WEIGHTS
 
 Training arguments:
