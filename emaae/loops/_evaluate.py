@@ -107,7 +107,7 @@ def get_filters():
     """
     """
     filters = []
-    cutoffs = np.linspace(0,1,20)
+    cutoffs = np.linspace(1,0,20, endpoint=False)[::-1]
     for c in cutoffs:
         filters.append(firwin(numtaps=51,cutoff=c))
     return filters, cutoffs
