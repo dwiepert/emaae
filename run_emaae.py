@@ -187,7 +187,7 @@ if __name__ == "__main__":
     es = model_config['early_stop']
     if es:
         name_str += f'_earlystop'
-    if model_config['batchnorm_first']':
+    if model_config['batchnorm_first']:
         name_str += f'_bnf'
     if model_config['final_tanh']:
         name_str += f'_tanh'
