@@ -39,8 +39,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     model.eval()
 
     filters, cutoffs = get_filters()
-    print(cutoffs)
-    print(filters[0].shape)
 
     # LOOK AT WEIGHTS
     weights = model.get_weights()
@@ -62,7 +60,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             
             # SAVE ENCODINGS
             fname = data['files'][0]
-            print(fname)
             if encode:
                 torch.save(encoded.cpu(),epath/f'{fname}.pt')
 
@@ -107,7 +104,6 @@ def get_filters():
     """
     filters = []
     cutoffs = np.linspace((1/20),1,20, endpoint=False)
-    print(cutoffs)
     for c in cutoffs:
         filters.append(firwin(numtaps=51,cutoff=c))
     return filters, cutoffs
@@ -119,9 +115,10 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, 
 
     for f in filters:
         convolved_signal = np.empty_like(encoded)
-        print(convolved_signal.shape)
         for i in range(encoded.shape[0]):
-            convolved_signal[i,:] = np.convolve(encoded[i,:], f, mode='same')
+            e = np.squeeze(encoded[i,:])
+            print(e.shape)
+            convolved_signal[i,:] = np.convolve(e, f, mode='same')
     
         outputs = model.decode(convolved_signal)
         outputs = np.squeeze(outputs.cpu().numpy())
