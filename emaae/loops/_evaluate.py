@@ -117,7 +117,6 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, 
         convolved_signal = np.empty_like(encoded)
         for i in range(encoded.shape[0]):
             e = np.squeeze(encoded[i,:])
-            print(e.shape)
             convolved_signal[i,:] = np.convolve(e, f, mode='same')
         
         convolved_signal = np.expand_dims(convolved_signal, 0)
