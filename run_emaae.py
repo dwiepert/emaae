@@ -111,22 +111,22 @@ if __name__ == "__main__":
     os.makedirs(args.out_dir, exist_ok=True)
     assert args.train_dir.exists() and args.val_dir.exists() and args.test_dir.exists(), 'One of the data directories does not exists'
 
-    name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
-    if args.alpha is not None:
-        name_str += f'_a{args.alpha}'
-    if args.weight_penalty:
-        name_str += '_weightpenalty'
-    if args.update:
-        name_str += f'_{args.penalty_scheduler}'
-    if args.early_stop:
-        name_str += f'_earlystop'
-    if args.batchnorm_first:
-        name_str += f'_bnf'
-    if args.final_tanh:
-        name_str += f'_tanh'
-    save_path = args.out_dir / name_str
-    save_path.mkdir(exist_ok=True)
-    print('Saving results to:', save_path)
+    # name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
+    # if args.alpha is not None:
+    #     name_str += f'_a{args.alpha}'
+    # if args.weight_penalty:
+    #     name_str += '_weightpenalty'
+    # if args.update:
+    #     name_str += f'_{args.penalty_scheduler}'
+    # if args.early_stop:
+    #     name_str += f'_earlystop'
+    # if args.batchnorm_first:
+    #     name_str += f'_bnf'
+    # if args.final_tanh:
+    #     name_str += f'_tanh'
+    # save_path = args.out_dir / name_str
+    # save_path.mkdir(exist_ok=True)
+    #print('Saving results to:', save_path)
 
     # PREP VARIABLES
     ## SET ALPHA
@@ -167,6 +167,33 @@ if __name__ == "__main__":
         with open(str(save_path/'model_config.json'), 'w') as f:
             json.dump(model_config,f)
 
+    lr = model_config['learning_rate']
+    epochs = model_config['epochs']
+    batch_sz = model_config['batch_sz']
+    optimizer = model_config['optimizer']
+    al = model_config['autoencoder_loss']
+    sl = model_config['sparse_loss']
+    name_str =  f'model_lr{lr}e{epochs}bs{batch_sz}_{optimizer}_{al}_{sl}'
+    alpha = model_config['alpha']
+    if alpha is not None:
+        name_str += f'_a{alpha}'
+    wp = model_config['weight_penalty']
+    if wp:
+        name_str += '_weightpenalty'
+    update =  model_config['update']
+    if update:
+        ps =  model_config['penalty_scheduler']
+        name_str += f'_{ps}'
+    es = model_config['early_stop']
+    if es:
+        name_str += f'_earlystop'
+    if model_config['batchnorm_firs']':
+        name_str += f'_bnf'
+    if model_config['final_tanh']:
+        name_str += f'_tanh'
+    save_path = args.out_dir / name_str
+    save_path.mkdir(exist_ok=True)
+
     # INITIALIZE MODEL / LOAD CHECKPOINT IF NECESSARY
     if args.model_type=='cnn':
         model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'])
@@ -198,29 +225,33 @@ if __name__ == "__main__":
     
     #Evaluate
 
-    if args.eval_only:
-        lr = model_config['learning_rate']
-        epochs = model_config['epochs']
-        batch_sz = model_config['batch_sz']
-        optimizer = model_config['optimizer']
-        al = model_config['autoencoder_loss']
-        sl = model_config['sparse_loss']
-        name_str =  f'model_lr{lr}e{epochs}bs{batch_sz}_{optimizer}_{al}_{sl}'
-        alpha = model_config['alpha']
-        if alpha is not None:
-            name_str += f'_a{alpha}'
-        wp = model_config['weight_penalty']
-        if wp:
-            name_str += '_weightpenalty'
-        update =  model_config['update']
-        if update:
-            ps =  model_config['penalty_scheduler']
-            name_str += f'_{ps}'
-        es = model_config['early_stop']
-        if es:
-            name_str += f'_earlystop'
-        save_path = args.out_dir / name_str
-        save_path.mkdir(exist_ok=True)
+    # if args.eval_only:
+    #     lr = model_config['learning_rate']
+    #     epochs = model_config['epochs']
+    #     batch_sz = model_config['batch_sz']
+    #     optimizer = model_config['optimizer']
+    #     al = model_config['autoencoder_loss']
+    #     sl = model_config['sparse_loss']
+    #     name_str =  f'model_lr{lr}e{epochs}bs{batch_sz}_{optimizer}_{al}_{sl}'
+    #     alpha = model_config['alpha']
+    #     if alpha is not None:
+    #         name_str += f'_a{alpha}'
+    #     wp = model_config['weight_penalty']
+    #     if wp:
+    #         name_str += '_weightpenalty'
+    #     update =  model_config['update']
+    #     if update:
+    #         ps =  model_config['penalty_scheduler']
+    #         name_str += f'_{ps}'
+    #     es = model_config['early_stop']
+    #     if es:
+    #         name_str += f'_earlystop'
+    #     if model_config['batchnorm_firs']':
+    #         name_str += f'_bnf'
+    #     if model_config['final_tanh']:
+    #         name_str += f'_tanh'
+    #     save_path = args.out_dir / name_str
+    #     save_path.mkdir(exist_ok=True)
        
     print('Saving results to:', save_path)
     metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device, encode=args.encode, decode=args.decode)
