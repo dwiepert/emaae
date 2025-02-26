@@ -36,9 +36,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     mse = []
     psd_mse = {}
     sparsity = []
-    encodings = []
-    freqs = []
-    psds = []
     model.eval()
 
     # LOOK AT WEIGHTS
@@ -61,6 +58,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             
             # SAVE ENCODINGS
             fname = data['files'][0]
+            print(fname)
             if encode:
                 torch.save(encoded.cpu(),epath/f'{fname}.pt')
 
@@ -97,3 +95,11 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 def low_pass(encoded:np.ndarray, frequencies, psd, sampling_rate:int=50, cutoff_frequency:int=10):
     """
     """
+
+
+
+#### scipy.signal.firwin - convole w your signals
+### num taps (how long the filter is), cutoff friequency - in units of nyquist frequency, probably easier to ignore our sampling rate, 20 linearly spaced cutoffs between 0-1, this gives a filter 
+### np.convolve with time series , filter, mode='same'
+### 51 vs. 151, orange one sharper, longer filter starts to get edge artifacts , should be high enough (51)
+### plt psd

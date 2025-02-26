@@ -11,7 +11,7 @@ from sklearn.metrics import mean_squared_error
 from scipy.stats import kurtosis
 #reconstruction vs. original features
 original = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
-reconstructed = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/decodings'
+reconstructed = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/decodings'
 #encodings = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_l1_a0.25_earlystop/encodings'
 #ep = glob.glob('*.pt', root_dir=encodings, recursive=False)
 
@@ -78,14 +78,14 @@ for i in range(len(files)):
         plt.plot(list(range(orig.shape[0])), pred2[:,:12], label='Reconstructed')
         plt.yticks([])
         plt.xlabel('Time')
-        plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/reconstructed_ema.png')
+        plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots/reconstructed_ema.png')
         plt.clf()
 
         plt.plot(list(range(orig.shape[0])), orig[:,12], label='Original')
         plt.plot(list(range(orig.shape[0])), pred[:,12], label='Reconstructed')
         plt.yticks([])
         plt.xlabel('Time')
-        plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/reconstructed_pitch.png')
+        plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots/reconstructed_pitch.png')
         plt.clf()
 
 
