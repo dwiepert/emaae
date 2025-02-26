@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Union, Dict, List
 ##third party
 import numpy as np
-from scipy.signal import welch
+from scipy.signal import firwin
 from sklearn.metrics import mean_squared_error
 import torch
 from torch.utils.data import DataLoader
@@ -34,9 +34,14 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     """
     save_path = Path(save_path)
     mse = []
-    psd_mse = {}
+    filtered_mse = []
     sparsity = []
     model.eval()
+
+    filters, cutoffs = get_filters()
+    print(cutoffs)
+    print(filters)
+    print(filters.shape)
 
     # LOOK AT WEIGHTS
     weights = model.get_weights()
@@ -78,6 +83,8 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             sparsity.append(calc_sparsity(encoded))
 
             ### PSD and low pass filtering 
+            fm = sweep_filters(encoded, targets, model, filters)
+            filtered_mse.append(fm)
             #frequencies, psd = welch(encoded, 50)
             #freqs.append(frequencies)
             #psd.append(psd)
@@ -85,17 +92,44 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 
 
     # SAVE METRICS
-    metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms}
+    filtered_mse = np.asarray(filtered_mse)
+    print(filtered_mse.shape)
+    print(filtered_mse)
+    avg_filtered_mse = np.mean(filtered_mse, dim=1)
+    metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist()}
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)
 
     return metrics
 
 
-def low_pass(encoded:np.ndarray, frequencies, psd, sampling_rate:int=50, cutoff_frequency:int=10):
+def get_filters():
     """
     """
+    filters = []
+    cutoffs = np.linspace(0,1,20)
+    for c in cutoffs:
+        filters.append(firwin(numtaps=51,cutoff=c))
+    return filters, cutoffs
 
+
+def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, filters:List[np.ndarray]) -> List[float]:
+    """"""
+    mse = []
+
+    for f in filters:
+        convolved_signal = np.empty_like(encoded)
+        print(convolved_signal)
+        print(convolved_signal.shape)
+        for i in range(encoded.shape[0]):
+            convolved_signal[i,:] = np.convolve(encoded[i,:], f, mode='same')
+    
+        outputs = model.decode(convolved_signal)
+        outputs = np.squeeze(outputs.cpu().numpy())
+
+        mse.append(mean_squared_error(targets, outputs))
+
+    return np.asarray(mse)
 
 
 #### scipy.signal.firwin - convole w your signals

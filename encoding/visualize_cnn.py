@@ -7,9 +7,9 @@ from pathlib import Path
 from sklearn.decomposition import PCA
 
 
-model_config_path = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/model_config.json'
-checkpoint_path = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/models/CNN_Autoencoder_ne2_nd2_innersz1024_bestmodel_e13.pth'
-save_path =  Path('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots')
+model_config_path = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/model_config.json'
+checkpoint_path = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/models/CNN_Autoencoder_ne2_nd2_innersz1024_bestmodel_e27.pth'
+save_path =  Path('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots')
 save_path.mkdir(exist_ok=True)
 
 with open(model_config_path, "rb") as f:
@@ -17,7 +17,8 @@ with open(model_config_path, "rb") as f:
    
 
 
-model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'])
+model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'])
+
 
 checkpoint = torch.load(checkpoint_path, map_location='cpu')
         #print(checkpoint.keys())
@@ -33,8 +34,13 @@ def get_plots(weights, norm_function, save_path, prefix):
     #get strongest activation
     strongest_activation = np.linalg.norm(np.asarray(norm_weights), axis=(1,2))
     m = np.argmax(strongest_activation)
+
+    if prefix == 'paired_maxmin':
+        reshaped_norm = np.reshape(norm_weights, (-1,12,11))
+    else:
+        reshaped_norm = norm_weights
     
-    plt.imshow(norm_weights[m,:,:])
+    plt.imshow(reshaped_norm[m,:,:])
     plt.title(f'Filter {m}')
     plt.ylabel('EMA dim')
     plt.xlabel('Time')
@@ -45,7 +51,7 @@ def get_plots(weights, norm_function, save_path, prefix):
         singledim = np.squeeze(norm_weights[:,i,:])
         t = np.linalg.norm(singledim, axis=(1))
         ti = np.argmax(t)
-        plt.imshow(norm_weights[ti,:,:])
+        plt.imshow(reshaped_norm[ti,:,:])
         plt.title(f'Filter {ti}, ema {i}')
         plt.ylabel('EMA dim')
         plt.xlabel('Time')

@@ -13,3 +13,6 @@ Analysis.nb.html
 /build
 /emaae.py.egg-info
 encoding/plots.py
+encoding/eval_encodings.py
+encoding/plots.py
+encoding/visualize_cnn.py

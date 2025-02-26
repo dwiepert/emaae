@@ -18,7 +18,7 @@ original = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/t
 test_dataset = EMADataset(root_dir=original, recursive=True, cci_features=None)
 test_feats = test_dataset.features
 
-enc_dir = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/encodings'
+enc_dir = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/encodings'
 enc_files = glob.glob('*.pt', root_dir=enc_dir, recursive=False)
 
 encodings = []
@@ -37,7 +37,7 @@ for f in enc_files:
     encodings_flattened.append(enc_flattened)
 
     #baseline
-    bs = f.split("_")[0]
+    bs = f.replace('.pt','')
     feat = test_feats[bs]
     feat = feat[:,mask]
     padded = np.pad(feat, (0,(1024-13)), mode='constant', constant_values=0)
@@ -56,7 +56,7 @@ plt.hist(encodings_cat, bins=100, log=True)
 plt.title('Log distribution of activations')
 plt.ylabel('Frequency')
 plt.show()
-plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/activations_dist.png')
+plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots/activations_dist.png')
 plt.clf()
 
 
@@ -68,14 +68,14 @@ plt.imshow(e)
 plt.ylabel('Encoding dimension')
 plt.xlabel('Time')
 plt.show()
-plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/visualization1.png')
+plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots/visualization1.png')
 plt.clf()
 
 plt.spy(e)
 plt.ylabel('Encoding dimension')
 plt.xlabel('Time')
 plt.show()
-plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/visualization2.png')
+plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots/visualization2.png')
 plt.clf()
 
 for i in range(e.shape[0]):
@@ -83,5 +83,5 @@ for i in range(e.shape[0]):
 plt.ylabel('Activation')
 plt.xlabel('Time')
 plt.show()
-plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e51bs16_adamw_mse_l1_a0.25_earlystop/plots/visualization3.png')
+plt.savefig('/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf/plots/visualization3.png')
 

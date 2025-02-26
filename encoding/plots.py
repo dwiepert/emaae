@@ -41,7 +41,7 @@ reconstructed = Path(reconstructed)
 rfeats = {}
 
 for r in reconstructed_files:
-    f = r.split("_")[0]
+    f = r.replace('.pt', '')
     rfeats[f] = np.transpose(np.squeeze(torch.load(reconstructed/r).numpy()))
 
 mask = np.ones(14, dtype=bool)
