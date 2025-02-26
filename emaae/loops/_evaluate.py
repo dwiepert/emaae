@@ -74,7 +74,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             mse.append(mean_squared_error(targets, outputs))
             
             encoded = np.squeeze(encoded.cpu().numpy())
-            encodings.append(encoded)
+            #encodings.append(encoded)
             sparsity.append(calc_sparsity(encoded))
 
             ### PSD and low pass filtering 
