@@ -40,8 +40,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 
     filters, cutoffs = get_filters()
     print(cutoffs)
-    print(filters)
-    print(filters.shape)
+    print(filters[0].shape)
 
     # LOOK AT WEIGHTS
     weights = model.get_weights()
@@ -94,8 +93,8 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     # SAVE METRICS
     filtered_mse = np.asarray(filtered_mse)
     print(filtered_mse.shape)
-    print(filtered_mse)
     avg_filtered_mse = np.mean(filtered_mse, dim=1)
+    print(avg_filtered_mse.shape)
     metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist()}
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)
@@ -120,7 +119,6 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, 
 
     for f in filters:
         convolved_signal = np.empty_like(encoded)
-        print(convolved_signal)
         print(convolved_signal.shape)
         for i in range(encoded.shape[0]):
             convolved_signal[i,:] = np.convolve(encoded[i,:], f, mode='same')
