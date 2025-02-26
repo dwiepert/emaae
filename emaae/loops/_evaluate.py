@@ -79,7 +79,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             sparsity.append(calc_sparsity(encoded))
 
             ### PSD and low pass filtering 
-            fm = sweep_filters(encoded, targets, model, filters)
+            fm = sweep_filters(encoded, targets, model, device, filters)
             filtered_mse.append(fm)
             #frequencies, psd = welch(encoded, 50)
             #freqs.append(frequencies)
@@ -109,7 +109,7 @@ def get_filters():
     return filters, cutoffs
 
 
-def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, filters:List[np.ndarray]) -> List[float]:
+def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, device, filters:List[np.ndarray]) -> List[float]:
     """"""
     mse = []
 
@@ -119,7 +119,10 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, 
             e = np.squeeze(encoded[i,:])
             print(e.shape)
             convolved_signal[i,:] = np.convolve(e, f, mode='same')
-    
+        
+        convolved_signal = np.expand_dims(convolved_signal, 0)
+        convolved_signal = torch.from_numpy(convolved_signal)
+        convolved_signal = convolved_signal.to(device)
         outputs = model.decode(convolved_signal)
         outputs = np.squeeze(outputs.cpu().numpy())
 
