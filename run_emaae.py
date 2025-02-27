@@ -164,9 +164,6 @@ if __name__ == "__main__":
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
                         'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh}
 
-        with open(str(save_path/'model_config.json'), 'w') as f:
-            json.dump(model_config,f)
-
     lr = model_config['learning_rate']
     epochs = model_config['epochs']
     batch_sz = model_config['batch_sz']
@@ -193,6 +190,10 @@ if __name__ == "__main__":
         name_str += f'_tanh'
     save_path = args.out_dir / name_str
     save_path.mkdir(exist_ok=True)
+
+    if args.model_config is None:
+        with open(str(save_path/'model_config.json'), 'w') as f:
+            json.dump(model_config,f)
 
     # INITIALIZE MODEL / LOAD CHECKPOINT IF NECESSARY
     if args.model_type=='cnn':
