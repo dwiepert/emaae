@@ -102,7 +102,7 @@ class SparseLoss(nn.Module):
         if self.loss2_type == 'l1':
             enc_target = torch.zeros(encoded.shape)
         elif self.loss2_type == 'tvl2':
-            enc_target = torch.roll(encoded, shifts=1, dims=1)
+            enc_target = torch.roll(encoded, shifts=1, dims=2)
         enc_target.to(self.device)
 
         loss2 = self.loss2(encoded, enc_target) 
