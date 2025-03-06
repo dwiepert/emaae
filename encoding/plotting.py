@@ -25,6 +25,7 @@ def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variati
     root = Path(root)
     log_root = root / 'logs'
     save = root / 'plots'
+    save.mkdir(exist_ok=True)
     save = save / 'logs'
     save.mkdir(exist_ok=True)
     tf = log_root.glob('train*.json')
@@ -303,18 +304,48 @@ def plot_psd(root):
     i = 0
     for f in enc_files:
         encoding = np.squeeze(torch.load(f).numpy())
+        x_vals = []
+        y_vals = []
         for j in range(encoding.shape[0]):
             plt.psd(encoding[j,:])
         plt.xlabel('Frequency')
         plt.ylabel('PSD (db)')
         plt.title('PSD', loc='center')
         plt.savefig(str(save_path/f'psd{i}.png'), dpi=300)
+        plt.clf()
+        plt.close()
+
+        for j in range(encoding.shape[0]):
+            x, y = plt.psd(encoding[j,:])
+            xzeros = np.zeros(x.shape)
+            if isinstance(x_vals, list):
+                count = 1
+                x_vals = x
+                y_vals = y
+            else:
+                count += 1
+                x_vals = np.add(x_vals, x)
+        plt.clf()
+        x_vals = x_vals / count
+        plt.plot(x_vals, y_vals)
+        plt.xlabel('Frequency')
+        plt.ylabel('PSD (db)')
+        plt.title('Average PSD', loc='center')
+        plt.savefig(str(save_path/f'avgpsd{i}.png'), dpi=300)
+
+
+
+
         i += 1
         plt.clf()
 
 
 def plot_filtermse(root):
     root = Path(root)
+    save_path = root / 'plots'
+    save_path = save_path / 'filters'
+    save_path.mkdir(exist_ok=True)
+
     with open(str(root / 'metrics.json'), "rb") as file:
         metrics = json.load(file)
     
@@ -329,6 +360,20 @@ def plot_filtermse(root):
     for i in range(fmse.shape[0]):
         filtered = fmse_melted[fmse_melted['encoding'] == i]
         plt.plot(filtered['cutoff'].tolist(),filtered['mse'].tolist())
+    
+    plt.xlabel('Filter Cutoff Frequency')
+    plt.ylabel('MSE')
+    plt.title('MSE after filtering')
+    plt.savefig(str(save_path / f'allfilters{i}.png'),dpi=300)
+    plt.clf()
+
+    avg_filtered = fmse_melted.groupby('cutoff').mean()
+    plt.plot(avg_filtered.index.tolist(),avg_filtered['mse'].tolist())
+    plt.xlabel('Filter Cutoff Frequency')
+    plt.ylabel('MSE')
+    plt.title('Average MSE after filtering')
+    plt.savefig(str(save_path / f'avgfilters{i}.png'),dpi=300)
+    plt.close()
 
 
 
@@ -341,9 +386,10 @@ test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/t
 
 #plot_logs(root)
 #plot_reconstructions(root, test_ema)
-#plot_psd(root)
+plot_psd(root)
 #plot_activations(root, test_ema)
-plot_filtermse(root)
+#plot_filtermse(root)
+#TODO: average psd
 
 
 

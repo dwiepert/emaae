@@ -64,7 +64,10 @@ class SparseLoss(nn.Module):
         """
         Total variation loss L2 (sum of squares of the gradient)
         """
-        loss = torch.sum(torch.square(torch.sub(encoded, enc_target)))
+        cut_encoded = encoded[:,:,:-1]
+        print(cut_encoded.shape)
+        loss = torch.sum(torch.square(torch.sub(cut_encoded, enc_target)))
+
         return loss
 
     def step(self) -> None:
@@ -102,7 +105,9 @@ class SparseLoss(nn.Module):
         if self.loss2_type == 'l1':
             enc_target = torch.zeros(encoded.shape)
         elif self.loss2_type == 'tvl2':
-            enc_target = torch.roll(encoded, shifts=1, dims=2)
+            enc_target = encoded[:,:,1:]
+            print(enc_target.shape)
+            #enc_target = torch.roll(encoded, shifts=1, dims=2)
         enc_target.to(self.device)
 
         loss2 = self.loss2(encoded, enc_target) 
