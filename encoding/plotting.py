@@ -209,7 +209,7 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
 
         #print('pause')
 
-def plot_activations(root, original):
+def plot_activations(root, original, upper_text=10**8, lower_text=10**7):
     root = Path(root)
     enc_root = root / 'encodings'
     enc_files = enc_root.glob('*.pt')
@@ -253,31 +253,47 @@ def plot_activations(root, original):
     plt.title('Log distribution of activations')
     plt.ylabel('Frequency')
     plt.xlabel('Activation')
-    plt.text(0.6,10**8, f'Avg kurtosis: {round_sig(avg_k, 4)}')
-    plt.text(0.6,10**7 + ((10**8 - 10**7)/3), f'Baseline: {round_sig(avg_bk,6)}')
+    plt.text(0.6,upper_text, f'Avg kurtosis: {round_sig(avg_k, 4)}')
+    plt.text(0.6,lower_test + ((upper_text- lower_text)/3), f'Baseline: {round_sig(avg_bk,6)}')
     plt.savefig(str(save_path/'0loghist.png'),dpi=300)
     plt.clf()
     plt.close()
 
 
     for i in range(len(encodings)):
+        new_save = save_path / 'imshow'
+        new_save.mkdir(exist_ok=True)
         plt.style.use('default')
         e = np.squeeze(encodings[i])
         plt.imshow(e)
         plt.ylabel('Encoding dimension')
         plt.xlabel('Time')
         plt.title('Encoding visualization')
-        plt.savefig(str(save_path / f'activation{i}.png'),dpi=300)
+        plt.savefig(str(new_save / f'activation{i}.png'),dpi=300)
         plt.clf()
         plt.close()
 
+        new_save = save_path / 'spy'
+        new_save.mkdir(exist_ok=True)
+        plt.style.use('default')
+        e = np.squeeze(encodings[i])
+        plt.spy(e)
+        plt.ylabel('Encoding dimension')
+        plt.xlabel('Time')
+        plt.title('Encoding visualization')
+        plt.savefig(str(new_save / f'activation{i}.png'),dpi=300)
+        plt.clf()
+        plt.close()
+
+        new_save = save_path / 'time'
+        new_save.mkdir(exist_ok=True)
         plt.style.use('ggplot')
         for j in range(e.shape[0]):
             plt.plot(e[j,:])
         plt.xlabel('Time')
         plt.ylabel('Activation')
         plt.title('Activation over time across encoding dimensions')
-        plt.savefig(str(save_path / f'activationvtime{i}.png'),dpi=300)
+        plt.savefig(str(new_save / f'activationvtime{i}.png'),dpi=300)
         plt.clf()
         plt.close()
 
@@ -302,12 +318,19 @@ def plot_psd(root):
     save_path.mkdir(exist_ok=True)
     plt.style.use('ggplot')
     i = 0
+    avg_psd = None
+    avg_freq = None
     for f in enc_files:
         encoding = np.squeeze(torch.load(f).numpy())
         x_vals = []
-        y_vals = []
+        y_vals = None
         for j in range(encoding.shape[0]):
-            plt.psd(encoding[j,:])
+            x,y = plt.psd(encoding[j,:])
+            x_vals.append(x)
+
+            if y_vals is None:
+                y_vals = y
+
         plt.xlabel('Frequency')
         plt.ylabel('PSD (db)')
         plt.title('PSD', loc='center')
@@ -315,29 +338,24 @@ def plot_psd(root):
         plt.clf()
         plt.close()
 
-        for j in range(encoding.shape[0]):
-            x, y = plt.psd(encoding[j,:])
-            xzeros = np.zeros(x.shape)
-            if isinstance(x_vals, list):
-                count = 1
-                x_vals = x
-                y_vals = y
-            else:
-                count += 1
-                x_vals = np.add(x_vals, x)
-        plt.clf()
-        x_vals = x_vals / count
-        plt.plot(x_vals, y_vals)
-        plt.xlabel('Frequency')
-        plt.ylabel('PSD (db)')
-        plt.title('Average PSD', loc='center')
-        plt.savefig(str(save_path/f'avgpsd{i}.png'), dpi=300)
+        x_vals = np.stack(x_vals,0)
 
-
-
+        #if avg_psd is None:
+        #    avg_psd = x_vals
+        #    avg_freq = y_vals
+        #else:
+        #    avg_psd = np.add(avg_psd, x_vals)
 
         i += 1
         plt.clf()
+    
+    avg_psd = avg_psd / len(enc_files)
+    plt.plot(avg_psd, y_vals)
+        
+    plt.xlabel('Frequency')
+    plt.ylabel('PSD (db)')
+    plt.title('Average PSD', loc='center')
+    plt.savefig(str(save_path/f'avgpsd.png'), dpi=300)
 
 
 def plot_filtermse(root):
@@ -364,7 +382,7 @@ def plot_filtermse(root):
     plt.xlabel('Filter Cutoff Frequency')
     plt.ylabel('MSE')
     plt.title('MSE after filtering')
-    plt.savefig(str(save_path / f'allfilters{i}.png'),dpi=300)
+    plt.savefig(str(save_path / f'allfilters.png'),dpi=300)
     plt.clf()
 
     avg_filtered = fmse_melted.groupby('cutoff').mean()
@@ -372,7 +390,7 @@ def plot_filtermse(root):
     plt.xlabel('Filter Cutoff Frequency')
     plt.ylabel('MSE')
     plt.title('Average MSE after filtering')
-    plt.savefig(str(save_path / f'avgfilters{i}.png'),dpi=300)
+    plt.savefig(str(save_path / f'avgfilters.png'),dpi=300)
     plt.close()
 
 
@@ -385,11 +403,10 @@ root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
 #plot_logs(root)
+#plot_filtermse(root)
 #plot_reconstructions(root, test_ema)
 plot_psd(root)
-#plot_activations(root, test_ema)
-#plot_filtermse(root)
-#TODO: average psd
+#plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
 
 
 
