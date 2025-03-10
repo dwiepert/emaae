@@ -59,7 +59,7 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
         end_lr = kwargs['end_lr']
         epochs = kwargs ['epochs']
         gamma = end_lr / (lr**(1/epochs))
-        print('LR scheduler gamma')
+        print(f'LR scheduler gamma: {gamma}')
         scheduler = ExponentialLR(optim, gamma=gamma)
     else:
         scheduler = None
