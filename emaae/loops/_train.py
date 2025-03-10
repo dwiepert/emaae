@@ -14,6 +14,7 @@ import time
 ##third party
 import torch
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
 ##local
 from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
@@ -21,7 +22,7 @@ from emaae.utils import calc_sparsity
 
 def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
-                 penalty_scheduler:str='step', **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
+                 penalty_scheduler:str='step', lr_scheduler:boolean=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
     """
     Set up optimizer and and loss functions
 
@@ -34,9 +35,11 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
     :param alpha: float, alpha for loss function (default=0.1)
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
     :param penalty_scheduler: str, type of penalty scheduler (default = step)
+    :param lr_scheduler: boolean, indicate whether to create a lr scheduler
     :param **kwargs: any additional penalty scheduler parameters
     :return optim: torch.optim, initialized optimizer
     :return loss_fn: initialized SparseLoss 
+    :return scheduler: lr scheduler
     """
 
     # SET UP OPTIMIZER
@@ -51,10 +54,19 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
     loss_fn = SparseLoss(device=device, loss1_type=loss1_type, loss2_type=loss2_type, alpha=alpha,
                           weight_penalty=weight_penalty, penalty_scheduler=penalty_scheduler, **kwargs)
 
-    return optim, loss_fn
+    # set up lr scheduler
+    if lr_scheduler:
+        end_lr = kwargs['end_lr']
+        epochs = kwargs ['epochs']
+        gamma = end_lr / (lr**(1/epochs))
+        print('LR scheduler gamma')
+        scheduler = ExponentialLR(optim, gamma=gamma)
+    else:
+        scheduler = None
+    return optim, loss_fn, scheduler
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
-          optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, save_path:Union[str, Path],
+          optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
           epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False) -> Union[CNNAutoEncoder]:
     """
     Train a model
@@ -65,12 +77,16 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param device: torch device
     :param optim: torch.optim, initialized optimizer
     :param criterion: initialized SparseLoss 
+    :param lr_scheduler: lr scheduler
     :param save_path: str/Path, path to save logs and best model to
     :param epochs: int, number of epochs to train for
     :param alpha_epochs: int, number of epochs to run alpha update for
     :param update: boolean, indicate whether to allow alpha update
+    :param early_stop: boolean, indicate whether to use early stopping
+    :param patience: int, early stop patience
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default=False)
     :return model: trained autoencoder model
+    
     """
 
     mpath = save_path / 'models'
@@ -197,6 +213,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             new_epoch_counter += 1
             if new_epoch_counter == alpha_epochs:
                 break
+        
+        if lr_scheduler is not None:
+            lr_scheduler.step()
     
     end_time = time.time() #model training end time
 

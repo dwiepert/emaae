@@ -17,7 +17,6 @@ import torch
 ##local
 from emaae.io import EMADataset
 
-
 #### plotting functions
 def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variation Loss (TVL2)'):
     """
@@ -74,8 +73,8 @@ def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variati
 
     tl = loss[loss['type']=='train']
     vl = loss[loss['type']=='val']
-    plt.plot(tl['epoch'].tolist(), tl['mse'].tolist(),color='black', label='Train')
-    plt.plot(vl['epoch'].tolist(), vl['mse'].tolist(), color='crimson', linestyle='--', label='Validation')
+    plt.plot(tl['epoch'].tolist(), [np.log(i) for i in tl['mse'].tolist()],color='black', label='Train')
+    plt.plot(vl['epoch'].tolist(), [np.log(i) for i in vl['mse'].tolist()], color='crimson', linestyle='--', label='Validation')
     plt.xlabel('Epoch')
     plt.ylabel('MSE')
     plt.legend()
@@ -101,12 +100,12 @@ def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variati
 
     tl = loss[loss['type']=='train']
     vl = loss[loss['type']=='val']
-    plt.plot(tl['epoch'].tolist(), tl[loss_type].tolist(),color='black', label='Train')
-    plt.plot(vl['epoch'].tolist(), vl[loss_type].tolist(), color='crimson', linestyle='--', label='Validation')
+    plt.plot(tl['epoch'].tolist(), [np.log(i) for i in tl[loss_type].tolist()],color='black', label='Train')
+    plt.plot(vl['epoch'].tolist(), [np.log(i) for i in vl[loss_type].tolist()], color='crimson', linestyle='--', label='Validation')
     plt.xlabel('Epoch')
     plt.ylabel(loss_label)
     plt.legend()
-    plt.title(f'{loss_label} across epochs', loc='center')
+    plt.title(f'Log {loss_label} across epochs', loc='center')
     plt.savefig(str(save / f'{loss_type}.png'), dpi=300)
     plt.clf()
     #plt.show()
@@ -209,7 +208,7 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
 
         #print('pause')
 
-def plot_activations(root, original, upper_text=10**8, lower_text=10**7):
+def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=0.1):
     root = Path(root)
     enc_root = root / 'encodings'
     enc_files = enc_root.glob('*.pt')
@@ -253,8 +252,8 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7):
     plt.title('Log distribution of activations')
     plt.ylabel('Frequency')
     plt.xlabel('Activation')
-    plt.text(0.6,upper_text, f'Avg kurtosis: {round_sig(avg_k, 4)}')
-    plt.text(0.6,lower_test + ((upper_text- lower_text)/3), f'Baseline: {round_sig(avg_bk,6)}')
+    plt.text(x_text,upper_text, f'Avg kurtosis: {round_sig(avg_k, 4)}')
+    plt.text(x_text,lower_text + ((upper_text- lower_text)/3), f'Baseline: {round_sig(avg_bk,6)}')
     plt.savefig(str(save_path/'0loghist.png'),dpi=300)
     plt.clf()
     plt.close()
@@ -349,13 +348,13 @@ def plot_psd(root):
         i += 1
         plt.clf()
     
-    avg_psd = avg_psd / len(enc_files)
-    plt.plot(avg_psd, y_vals)
+    #avg_psd = avg_psd / len(enc_files)
+    #plt.plot(avg_psd, y_vals)
         
-    plt.xlabel('Frequency')
-    plt.ylabel('PSD (db)')
-    plt.title('Average PSD', loc='center')
-    plt.savefig(str(save_path/f'avgpsd.png'), dpi=300)
+    #plt.xlabel('Frequency')
+    #plt.ylabel('PSD (db)')
+    #plt.title('Average PSD', loc='center')
+    #plt.savefig(str(save_path/f'avgpsd.png'), dpi=300)
 
 
 def plot_filtermse(root):
@@ -394,19 +393,14 @@ def plot_filtermse(root):
     plt.close()
 
 
-
-    
-
-
-
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e50bs16_adamw_mse_tvl2_a0.25_earlystop_bnf'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.0003e100bs16_adamw_mse_tvl2_a0.25_earlystop_bnf'
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
-#plot_logs(root)
+plot_logs(root)
 #plot_filtermse(root)
 #plot_reconstructions(root, test_ema)
-plot_psd(root)
-#plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
+#plot_psd(root)
+plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
 
 
 
