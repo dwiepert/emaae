@@ -197,7 +197,7 @@ if __name__ == "__main__":
         name_str += f'_earlystop'
     if args.batchnorm_first:
         name_str += f'_bnf'
-    if args.final_Tanh:
+    if args.final_tanh:
         name_str += f'_tanh'
     if args.lr_scheduler:
         name_str += f'_explr{args.end_lr}'
