@@ -22,7 +22,7 @@ from emaae.utils import calc_sparsity
 
 def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
-                 penalty_scheduler:str='step', lr_scheduler:boolean=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss] :
+                 penalty_scheduler:str='step', lr_scheduler:bool=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss, Union[ExponentialLR, None]] :
     """
     Set up optimizer and and loss functions
 
