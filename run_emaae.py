@@ -166,7 +166,7 @@ if __name__ == "__main__":
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
-                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler}
+                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr}
 
     if args.eval_only:
         args.lr = model_config['learning_rate']
@@ -183,9 +183,10 @@ if __name__ == "__main__":
         args.batchnorm_first = model_config['batchnorm_first']
         args.final_tanh = model_config['final_tanh']
         args.lr_scheduler = model_config['lr_scheduler']
+        args.end_lr = model_config['end_lr']
 
 
-    name_str =  f'model_lr{argss.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
+    name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
     if args.alpha is not None:
         name_str += f'_a{args.alpha}'
     if args.weight_penalty:
@@ -199,7 +200,7 @@ if __name__ == "__main__":
     if args.final_Tanh:
         name_str += f'_tanh'
     if args.lr_scheduler:
-        name_str += f'_explr'
+        name_str += f'_explr{args.end_lr}'
     save_path = args.out_dir / name_str
     save_path.mkdir(exist_ok=True)
 
