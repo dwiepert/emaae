@@ -188,9 +188,13 @@ if __name__ == "__main__":
         args.final_tanh = model_config['final_tanh']
         args.lr_scheduler = model_config['lr_scheduler']
         args.end_lr = model_config['end_lr']
+        args.n_encoder = model_config['n_encoder']
+        args.n_decoder = model_config['n_decoder']
+        args.initial_ekernel = model_config['initial_ekernel']
+        args.initial_dkernel = model_config['initial_dkernel']
 
 
-    name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
+    name_str =  f'model_e{args.n_encoder}_iek{args.initial_ekernel}_d{args.n_decoder}_idk{args.initial_dkernel}_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
     if args.alpha is not None:
         name_str += f'_a{args.alpha}'
     if args.weight_penalty:
