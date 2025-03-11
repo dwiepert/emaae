@@ -22,9 +22,11 @@ class CNNAutoEncoder(nn.Module):
     :param n_decoder: int, number of decoder blocks (default = 5)
     :param inner_size: int, size of encoded representations (default = 1024)
     """
-    def __init__(self, input_dim:int=13, n_encoder:int=5, n_decoder:int=5, inner_size:int=1024, batchnorm_first:bool=True, final_tanh:bool=False):
+    def __init__(self, input_dim:int=13, n_encoder:int=5, n_decoder:int=5, inner_size:int=1024, batchnorm_first:bool=True, final_tanh:bool=False, initial_ekernel:int=5, initial_dkernel:int=5):
         super(CNNAutoEncoder, self).__init__()
         print(f'{n_encoder} encoder layers, {n_decoder} decoder layers, {inner_size} inner dims.')
+        self.initial_ekernel=initial_ekernel
+        self.initial_dkernel=initial_dkernel
         self.input_dim = input_dim
         if self.input_dim not in [13]:
             raise NotImplementedError(f'Model not compatible with {self.input_dim} dimensional features.')
@@ -60,10 +62,15 @@ class CNNAutoEncoder(nn.Module):
                      'out_size': [128, 256, 512,1024],
                      'kernel_size':[5,3,3,3]}
         
+        if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13 and self.initial_ekernel==11:
+            return {'in_size': [self.input_dim, 128, 512],
+                      'out_size': [128,512,1024],
+                      'kernel_size':[11,3,3]} 
+        
         if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13:
             return {'in_size': [self.input_dim, 128, 512],
                       'out_size': [128,512,1024],
-                      'kernel_size':[5,3,3]}
+                      'kernel_size':[5,3,3]} 
         
         # if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13:
         #     return {'in_size': [self.input_dim, 128, 512],
@@ -111,11 +118,14 @@ class CNNAutoEncoder(nn.Module):
                       'out_size': [512, 256, 128, self.input_dim],
                       'kernel_size':[5,3,3,3]}
         
-        if self.n_decoder == 3 and self.inner_size==1024 and self.input_dim==13:
+        if self.n_decoder == 3 and self.inner_size==1024 and self.input_dim==13 and self.initial_dkernel==5:
             return {'in_size': [1024, 512, 128],
                       'out_size': [512, 128, self.input_dim],
                       'kernel_size':[5,3,3]}
-        
+        if self.n_decoder == 2 and self.inner_size==1024 and self.input_dim==13 and self.initial_dkernel==5:
+            return {'in_size': [1024, 512],
+                      'out_size': [512, self.input_dim],
+                      'kernel_size':[5,3]}
         if self.n_decoder == 2 and self.inner_size==1024 and self.input_dim==13:
             return {'in_size': [1024, 512],
                       'out_size': [512, self.input_dim],
@@ -209,7 +219,7 @@ class CNNAutoEncoder(nn.Module):
         Return the model type
         :return: str, model type
         """
-        return f'CNN_Autoencoder_ne{self.n_encoder}_nd{self.n_decoder}_innersz{self.inner_size}'
+        return f'CNN_Autoencoder_ne{self.n_encoder}_nd{self.n_decoder}_innersz{self.inner_size}_iek{self.initiel_ekernal}_idk{self.initial_dkernel}'
     
     def get_weights(self) -> List[torch.Tensor]:
         """

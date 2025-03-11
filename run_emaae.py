@@ -56,8 +56,12 @@ if __name__ == "__main__":
                                 help='Size of encoder representations to learn.')
     model_args.add_argument('--n_encoder', type=int, default=5, 
                                 help='Number of encoder blocks to use in model.')
+    model_args.add_argument('--initial_ekernel', type=int, default=5, 
+                                help='Size of initial kernel to encoding block.')
     model_args.add_argument('--n_decoder', type=int, default=3, 
                                 help='Number of decoder blocks to use in model.')
+    model_args.add_argument('--initial_dkernel', type=int, default=5, 
+                                help='Size of initial kernel to decoding block.')
     model_args.add_argument('--batchnorm_first', action='store_true',
                                 help='Indicate whether to use batchnorm before or after nonlinearity.')
     model_args.add_argument('--final_tanh', action='store_true',
@@ -163,7 +167,7 @@ if __name__ == "__main__":
         with open(args.model_config, "rb") as f:
             model_config = json.load(f)
     else:
-        model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'n_decoder':args.n_decoder, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
+        model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'initial_ekernel':args.initial_ekernel, 'n_decoder':args.n_decoder, 'initial_dkernel':args.initial_dkernel, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
                         'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr}
@@ -210,7 +214,7 @@ if __name__ == "__main__":
 
     # INITIALIZE MODEL / LOAD CHECKPOINT IF NECESSARY
     if args.model_type=='cnn':
-        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'])
+        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'], initial_ekernel=model_config['initial_ekernel'], initial_dkernel=model_config['initial_dkernel'])
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
     
