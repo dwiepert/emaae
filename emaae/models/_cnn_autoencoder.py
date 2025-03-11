@@ -219,7 +219,7 @@ class CNNAutoEncoder(nn.Module):
         Return the model type
         :return: str, model type
         """
-        return f'CNN_Autoencoder_ne{self.n_encoder}_nd{self.n_decoder}_innersz{self.inner_size}_iek{self.initiel_ekernal}_idk{self.initial_dkernel}'
+        return f'CNN_Autoencoder_ne{self.n_encoder}_nd{self.n_decoder}_innersz{self.inner_size}_iek{self.initial_ekernal}_idk{self.initial_dkernel}'
     
     def get_weights(self) -> List[torch.Tensor]:
         """
