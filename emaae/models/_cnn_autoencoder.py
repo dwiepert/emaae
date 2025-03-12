@@ -161,7 +161,7 @@ class CNNAutoEncoder(nn.Module):
             block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
 
             if (n == (len((params['in_size'])) - 1)) and exclude_final_relu and (not exclude_final_norm):
-                block['instancenorm'] = nn.InstanceNorm1dNorm1d(num_features=params['out_size'][n])
+                block['instancenorm'] = nn.InstanceNorm1d(num_features=params['out_size'][n])
             
             if (n == (len((params['in_size'])) - 1)) and final_tanh:
                 #case 1 - we are at the final layer and we want to have tanh - don't include batchnorm, just have tanh (ONLY FOR DECODER SO THAT'S WHY NO BATCHNORM)
