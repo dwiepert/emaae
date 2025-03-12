@@ -1,4 +1,4 @@
-__version__ = '0.3.6'
+__version__ = '0.3.7'
 
 #change log:
 # 0.0.0: initialized repo
@@ -14,3 +14,4 @@ __version__ = '0.3.6'
 # 0.3.4: update layers + TVL2 loss
 # 0.3.5: lr scheduler added
 # 0.3.6: new decoding/encoding setups
+# 0.3.7: final encoder batchnorm changed to instance norm

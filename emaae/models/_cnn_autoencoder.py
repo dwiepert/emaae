@@ -44,7 +44,7 @@ class CNNAutoEncoder(nn.Module):
         self.final_tanh = final_tanh
         self.encoder_params = self._encoder_block_options()
         self.decoder_params = self._decoder_block_options()
-        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_relu=True, exclude_final_batchnorm=False, batchnorm_first=self.batchnorm_first, final_tanh=False)), ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_relu=True, exclude_final_batchnorm=True, batchnorm_first=self.batchnorm_first, final_tanh=self.final_tanh)) ]))
+        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_relu=True, exclude_final_norm=False, batchnorm_first=self.batchnorm_first, final_tanh=False)), ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_relu=True, exclude_final_norm=True, batchnorm_first=self.batchnorm_first, final_tanh=self.final_tanh)) ]))
 
     def _encoder_block_options(self):
         """
@@ -146,7 +146,7 @@ class CNNAutoEncoder(nn.Module):
                       'kernel_size':[5,3,3]}
 
 
-    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_relu:bool=False, exclude_final_batchnorm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False) -> nn.Sequential:
+    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_relu:bool=False, exclude_final_norm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False) -> nn.Sequential:
         """
         Generate a sequence of layers
 
@@ -160,8 +160,8 @@ class CNNAutoEncoder(nn.Module):
             block = OrderedDict()
             block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
 
-            if (n == (len((params['in_size'])) - 1)) and exclude_final_relu and (not exclude_final_batchnorm):
-                block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
+            if (n == (len((params['in_size'])) - 1)) and exclude_final_relu and (not exclude_final_norm):
+                block['instancenorm'] = nn.InstanceNorm1dNorm1d(num_features=params['out_size'][n])
             
             if (n == (len((params['in_size'])) - 1)) and final_tanh:
                 #case 1 - we are at the final layer and we want to have tanh - don't include batchnorm, just have tanh (ONLY FOR DECODER SO THAT'S WHY NO BATCHNORM)

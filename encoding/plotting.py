@@ -439,14 +439,14 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_lr0.001e500bs16_adamw_mse_tvl2_a0.25_earlystop_bnf_explr0.0001'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e200bs16_adamw_mse_tvl2_a0.25_earlystop_bnf'
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
 #plot_logs(root)
 #plot_filtermse(root)
-plot_reconstructions(root, test_ema)
+#plot_reconstructions(root, test_ema)
 #plot_psd(root)
-#plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
+plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
 
 
 
