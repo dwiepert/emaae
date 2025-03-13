@@ -35,6 +35,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     save_path = Path(save_path)
     mse = []
     filtered_mse = []
+    baseline_filtered = []
     sparsity = []
     model.eval()
 
@@ -79,8 +80,11 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             sparsity.append(calc_sparsity(encoded))
 
             ### PSD and low pass filtering 
-            fm = sweep_filters(encoded, targets, model, device, filters)
+            fm = sweep_filters(encoded, targets, filters, model, device)
             filtered_mse.append(fm)
+
+            bfm = sweep_filters(targets, targets, filters, model=None, device=None)
+            baseline_filtered.append(bfm)
             #frequencies, psd = welch(encoded, 50)
             #freqs.append(frequencies)
             #psd.append(psd)
@@ -89,10 +93,12 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 
     # SAVE METRICS
     filtered_mse = np.asarray(filtered_mse)
+    baseline_filtered = np.asarray(baseline_filtered)
     #print(filtered_mse.shape)
     avg_filtered_mse = np.mean(filtered_mse, axis=0)
+    avg_baseline_filtered = np.mean(baseline_filtered, axis=0)
     #print(avg_filtered_mse.shape)
-    metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist()}
+    metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist(), 'avg_baseline_filtered':avg_baseline_filtered.tolist(), 'baseline_filtered':baseline_filtered.tolist()}
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)
 
@@ -109,7 +115,7 @@ def get_filters():
     return filters, cutoffs
 
 
-def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, device, filters:List[np.ndarray]) -> List[float]:
+def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray], model:CNNAutoEncoder, device) -> List[float]:
     """"""
     mse = []
 
@@ -118,12 +124,16 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray, model:CNNAutoEncoder, 
         for i in range(encoded.shape[0]):
             e = np.squeeze(encoded[i,:])
             convolved_signal[i,:] = np.convolve(e, f, mode='same')
-        
-        convolved_signal = np.expand_dims(convolved_signal, 0)
-        convolved_signal = torch.from_numpy(convolved_signal)
-        convolved_signal = convolved_signal.to(device)
-        outputs = model.decode(convolved_signal)
-        outputs = np.squeeze(outputs.cpu().numpy())
+
+        if model is not None:
+            convolved_signal = np.expand_dims(convolved_signal, 0)
+            convolved_signal = torch.from_numpy(convolved_signal)
+            convolved_signal = convolved_signal.to(device)
+
+            outputs = model.decode(convolved_signal)
+            outputs = np.squeeze(outputs.cpu().numpy())
+        else: 
+            outputs = convolved_signal
 
         mse.append(mean_squared_error(targets, outputs))
 

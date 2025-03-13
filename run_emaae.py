@@ -154,9 +154,10 @@ if __name__ == "__main__":
     val_dataset = EMADataset(root_dir=args.val_dir, recursive=args.recursive, cci_features=cci_features)
     test_dataset = EMADataset(root_dir=args.test_dir, recursive=args.recursive, cci_features=cci_features)
 
-    assert not bool(set(train_dataset.files) & set(val_dataset.files)), 'Overlapping files between train and validation set.'
-    assert not bool(set(train_dataset.files) & set(test_dataset.files)), 'Overlapping files between train and test set.'
-    assert not bool(set(test_dataset.files) & set(val_dataset.files)), 'Overlapping files between val and test set.'
+    if not args.eval_only:
+        assert not bool(set(train_dataset.files) & set(val_dataset.files)), 'Overlapping files between train and validation set.'
+        assert not bool(set(train_dataset.files) & set(test_dataset.files)), 'Overlapping files between train and test set.'
+        assert not bool(set(test_dataset.files) & set(val_dataset.files)), 'Overlapping files between val and test set.'
     
     train_loader = DataLoader(train_dataset, batch_size=args.batch_sz, shuffle=True, num_workers=4, collate_fn=custom_collatefn)
     val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=custom_collatefn)

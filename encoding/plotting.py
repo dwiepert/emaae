@@ -118,13 +118,13 @@ def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variati
     plt.clf()
     #plt.show()
 
-    plt.plot(tl['epoch'].tolist()[1:], tl['mse'].tolist()[1:],color='black', label='Train')
-    plt.plot(vl['epoch'].tolist()[1:], vl['mse'].tolist()[1:], color='crimson', linestyle='--', label='Validation')
+    plt.plot(tl['epoch'].tolist()[50:], tl['mse'].tolist()[50:],color='black', label='Train')
+    plt.plot(vl['epoch'].tolist()[50:], vl['mse'].tolist()[50:], color='crimson', linestyle='--', label='Validation')
     plt.xlabel('Epoch')
     plt.ylabel('MSE')
     plt.legend()
     plt.title('MSE across epochs', loc='center')
-    plt.savefig(str(save / 'mse_e1.png'), dpi=300)
+    plt.savefig(str(save / 'mse_e50.png'), dpi=300)
     plt.clf()
 
     ### Sparsity loss only
@@ -213,7 +213,7 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
     save_path = reconstructed_root / 'plots'
     save_path = save_path / 'reconstruction'
     save_path.mkdir(exist_ok=True)
-
+    plt.style.use('default')
     rfeats = {}
     for r in rpaths:
         name = r.name.replace('.pt','')
@@ -230,27 +230,33 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
     rlist = np.arange(13)*2.1
     
     for i in range(len(files)):
-        orig = test_feats[files[i]]
-        orig = orig[:,mask]
-        pred = rfeats[files[i]]
+        if i < 10:
+            orig = test_feats[files[i]]
+            orig = orig[:,mask]
+            pred = rfeats[files[i]]
 
-        #plt.style.use('ggplot')
-        for j in range(orig.shape[1]):
-            jcol = pred[:,j]
-            norm_j = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
-            norm_j += rlist[j]
-            plt.plot(norm_j, color='dimgray')
+            #plt.style.use('ggplot')
+            for j in range(orig.shape[1]):
+                jcol = orig[:,j]
+                norm_j = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
+                norm_j += rlist[j]
+                if j == 0:
+                    plt.plot(norm_j, color='dimgray', label='Original')
+                else:
+                    plt.plot(norm_j, color='dimgray')
+                
 
-            jcol = orig[:,j]
-            norm_j = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
-            norm_j += rlist[j]
-            plt.plot(norm_j, color=colors[j])
+                jcol = pred[:,j]
+                norm_j = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
+                norm_j += rlist[j]
+                plt.plot(norm_j, color=colors[j])
 
-        plt.yticks(rlist+1, order)
-        plt.xlabel('Time')
-        plt.title('Original vs. reconstructed EMA features')
-        plt.savefig(str(save_path / f'reconstruction{i}'), dpi=300)
-        plt.close()
+            plt.yticks(rlist+1, order)
+            plt.legend()
+            plt.xlabel('Time')
+            plt.title('Original vs. reconstructed EMA features')
+            plt.savefig(str(save_path / f'reconstruction{i}'), dpi=300)
+            plt.close()
 
         #print('pause')
 
@@ -306,41 +312,42 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=
 
 
     for i in range(len(encodings)):
-        new_save = save_path / 'imshow'
-        new_save.mkdir(exist_ok=True)
-        plt.style.use('default')
-        e = np.squeeze(encodings[i])
-        plt.imshow(e)
-        plt.ylabel('Encoding dimension')
-        plt.xlabel('Time')
-        plt.title('Encoding visualization')
-        plt.savefig(str(new_save / f'activation{i}.png'),dpi=300)
-        plt.clf()
-        plt.close()
+        if i < 10:
+            new_save = save_path / 'imshow'
+            new_save.mkdir(exist_ok=True)
+            plt.style.use('default')
+            e = np.squeeze(encodings[i])
+            plt.imshow(e)
+            plt.ylabel('Encoding dimension')
+            plt.xlabel('Time')
+            plt.title('Encoding visualization')
+            plt.savefig(str(new_save / f'activation{i}.png'),dpi=300)
+            plt.clf()
+            plt.close()
 
-        new_save = save_path / 'spy'
-        new_save.mkdir(exist_ok=True)
-        plt.style.use('default')
-        e = np.squeeze(encodings[i])
-        plt.spy(e)
-        plt.ylabel('Encoding dimension')
-        plt.xlabel('Time')
-        plt.title('Encoding visualization')
-        plt.savefig(str(new_save / f'activation{i}.png'),dpi=300)
-        plt.clf()
-        plt.close()
+            new_save = save_path / 'spy'
+            new_save.mkdir(exist_ok=True)
+            plt.style.use('default')
+            e = np.squeeze(encodings[i])
+            plt.spy(e)
+            plt.ylabel('Encoding dimension')
+            plt.xlabel('Time')
+            plt.title('Encoding visualization')
+            plt.savefig(str(new_save / f'activation{i}.png'),dpi=300)
+            plt.clf()
+            plt.close()
 
-        new_save = save_path / 'time'
-        new_save.mkdir(exist_ok=True)
-        plt.style.use('ggplot')
-        for j in range(e.shape[0]):
-            plt.plot(e[j,:])
-        plt.xlabel('Time')
-        plt.ylabel('Activation')
-        plt.title('Activation over time across encoding dimensions')
-        plt.savefig(str(new_save / f'activationvtime{i}.png'),dpi=300)
-        plt.clf()
-        plt.close()
+            new_save = save_path / 'time'
+            new_save.mkdir(exist_ok=True)
+            plt.style.use('ggplot')
+            for j in range(e.shape[0]):
+                plt.plot(e[j,:])
+            plt.xlabel('Time')
+            plt.ylabel('Activation')
+            plt.title('Activation over time across encoding dimensions')
+            plt.savefig(str(new_save / f'activationvtime{i}.png'),dpi=300)
+            plt.clf()
+            plt.close()
 
 def round_sig(x, digits):
     if x == 0:
@@ -366,33 +373,33 @@ def plot_psd(root):
     avg_psd = None
     avg_freq = None
     for f in enc_files:
-        encoding = np.squeeze(torch.load(f).numpy())
-        x_vals = []
-        y_vals = None
-        for j in range(encoding.shape[0]):
-            x,y = plt.psd(encoding[j,:])
-            x_vals.append(x)
+        if i < 10:
+            encoding = np.squeeze(torch.load(f).numpy())
+            x_vals = []
+            y_vals = None
+            for j in range(encoding.shape[0]):
+                x,y = plt.psd(encoding[j,:])
+                x_vals.append(x)
 
-            if y_vals is None:
-                y_vals = y
+                if y_vals is None:
+                    y_vals = y
 
-        plt.xlabel('Frequency')
-        plt.ylabel('PSD (db)')
-        plt.title('PSD', loc='center')
-        plt.savefig(str(save_path/f'psd{i}.png'), dpi=300)
-        plt.clf()
-        plt.close()
+            plt.xlabel('Frequency')
+            plt.ylabel('PSD (db)')
+            plt.title('PSD', loc='center')
+            plt.savefig(str(save_path/f'psd{i}.png'), dpi=300)
+            plt.clf()
+            plt.close()
 
-        x_vals = np.stack(x_vals,0)
-
-        #if avg_psd is None:
-        #    avg_psd = x_vals
-        #    avg_freq = y_vals
-        #else:
-        #    avg_psd = np.add(avg_psd, x_vals)
+            #x_vals = np.stack(x_vals,0)
+            plt.clf()
+            #if avg_psd is None:
+            #    avg_psd = x_vals
+            #    avg_freq = y_vals
+            #else:
+            #    avg_psd = np.add(avg_psd, x_vals)
 
         i += 1
-        plt.clf()
     
     #avg_psd = avg_psd / len(enc_files)
     #plt.plot(avg_psd, y_vals)
@@ -413,17 +420,23 @@ def plot_filtermse(root):
         metrics = json.load(file)
     
     fmse = np.asarray(metrics['filtered_mse'])
+    bmse = np.asarray(metrics['baseline_filtered'])
     cutoffs = metrics['cutoffs']
 
     fmse_df = pd.DataFrame(fmse, columns=cutoffs)
     fmse_df['encoding'] = fmse_df.index
     fmse_melted = pd.melt(fmse_df, id_vars=['encoding'], value_vars=cutoffs, var_name='cutoff', value_name='mse')
+
+    bmse_df = pd.DataFrame(bmse, columns=cutoffs)
+    bmse_df['encoding'] = bmse_df.index
+    bmse_melted = pd.melt(bmse_df, id_vars=['encoding'], value_vars=cutoffs, var_name='cutoff', value_name='mse')
   
     plt.style.use('ggplot')
     for i in range(fmse.shape[0]):
         filtered = fmse_melted[fmse_melted['encoding'] == i]
         plt.plot(filtered['cutoff'].tolist(),filtered['mse'].tolist())
     
+    plt.gca().set_ylim(bottom=0)
     plt.xlabel('Filter Cutoff Frequency')
     plt.ylabel('MSE')
     plt.title('MSE after filtering')
@@ -431,7 +444,11 @@ def plot_filtermse(root):
     plt.clf()
 
     avg_filtered = fmse_melted.groupby('cutoff').mean()
-    plt.plot(avg_filtered.index.tolist(),avg_filtered['mse'].tolist())
+    avg_baseline = bmse_melted.groupby('cutoff').mean()
+    plt.plot(avg_filtered.index.tolist(),avg_filtered['mse'].tolist(), color='black', label='Encodings')
+    plt.plot(avg_baseline.index.tolist(),avg_baseline['mse'].tolist(), color='crimson', linestyle='--', label='Baseline')
+    plt.gca().set_ylim(bottom=0)
+    plt.legend()
     plt.xlabel('Filter Cutoff Frequency')
     plt.ylabel('MSE')
     plt.title('Average MSE after filtering')
@@ -439,13 +456,14 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e200bs16_adamw_mse_tvl2_a0.25_earlystop_bnf'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.25_earlystop_bnf'
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
-#plot_logs(root)
-#plot_filtermse(root)
-#plot_reconstructions(root, test_ema)
-#plot_psd(root)
+plot_logs(root)
+plot_filtermse(root)
+plot_reconstructions(root, test_ema)
+#filtermse_baseline(test_ema)
+plot_psd(root)
 plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
 
 
