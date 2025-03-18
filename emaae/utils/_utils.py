@@ -61,27 +61,33 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
         sparsity = sparsity.item()
     return sparsity
 
-def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:np.ndarray=None, c:float=0.2, ntaps:int=51, to_torch:bool=True) -> List[float]:
+def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.ndarray]=None, c:float=0.2, ntaps:int=51, to_torch:bool=True) -> List[float]:
     """
     """
     if f is None:
         f = firwin(numtaps=ntaps,cutoff=c)
-    convolved_batch = []
     if not isinstance(batch_encoded, np.ndarray):
-        batch_encoded = batch_encoded.detach().cpu().numpy()
-    for b in range(batch_encoded.shape[0]):
-        encoded = np.squeeze(batch_encoded[b,:,:])
-        convolved_signal = np.empty_like(encoded)
-        for i in range(encoded.shape[0]):
-            e = np.squeeze(encoded[i,:])
-            convolved_signal[i,:] = np.convolve(e, f, mode='same')
-        convolved_batch.append(convolved_signal)
+        if not isinstance(f, torch.tensor):
+            f = torch.from_numpy()
+        for b in range(batch_encoded.shape[0]):
+            encoded = torch.squeeze(batch_encoded[b,:,:])
+            convolved_signal = torch.empty(encoded.shape)
+            for i in range(encoded.shape[0]):
+                e = torch.squeeze(encoded[i,:])
+                convolved_signal[i,:] = torch.nn.functional.conv1d(e, f).view(-1)
+            convolved_batch.append(convolved_signal)
+            convolved_batch = torch.stack(convolved_batch)
+    else:
+        for b in range(batch_encoded.shape[0]):
+            encoded = np.squeeze(batch_encoded[b,:,:])
+            convolved_signal = np.empty_like(encoded)
+            for i in range(encoded.shape[0]):
+                e = np.squeeze(encoded[i,:])
+                convolved_signal[i,:] = np.convolve(e, f, mode='same')
+            convolved_batch.append(convolved_signal)
 
-    convolved_batch = np.stack(convolved_batch)
+        convolved_batch = np.stack(convolved_batch)
     
-    if to_torch:
-        convolved_batch = torch.from_numpy(convolved_batch)
-
     return convolved_batch
 
 def get_filters(n_filters:int=20, ntaps:int=51):

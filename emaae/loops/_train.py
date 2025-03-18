@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Union
 import time
 ##third party
+from scipy.signal import firwin
 import torch
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ExponentialLR
@@ -102,6 +103,8 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         alpha_update = True
         new_epoch_counter = 0
 
+    f = torch.from_numpy(firwin(numtaps=ntaps,cutoff=filter_cutoff))
+
     # START TRAINING
     for e in range(epochs):
         print('EPOCH {}:'.format(e + 1))
@@ -119,7 +122,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             encoding = model.encode(inputs)
 
             if filter_loss:
-                encoding = filter_encoding(encoding, c=filter_cutoff, ntaps=ntaps, to_torch=True)
+                encoding = filter_encoding(encoding, f=f, to_torch=True)
                 encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
