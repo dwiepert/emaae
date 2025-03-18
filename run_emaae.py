@@ -144,6 +144,7 @@ if __name__ == "__main__":
     if args.sparse_loss == 'filter':
         assert args.cutoff_freq is not None and args.n_taps is not None
         filter_loss = True
+        args.alpha = 1
     else:
         filter_loss = False
     # PREP VARIABLES
