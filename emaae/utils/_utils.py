@@ -69,31 +69,33 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
     if f is None:
         f = firwin(numtaps=ntaps,cutoff=c)
     if not isinstance(batch_encoded, np.ndarray):
-        if not isinstance(f, torch.Tensor):
-            f = torch.from_numpy()
-        f1 = torch.flip(f, (0,)).view(1, 1, -1)
-        for b in range(batch_encoded.shape[0]):
-            encoded = torch.squeeze(batch_encoded[b,:,:])
-            convolved_signal = torch.empty(encoded.shape)
-            for i in range(encoded.shape[0]):
-                e = torch.squeeze(encoded[i,:])
-                e1 = e.view(1, 1, -1)
-                out = torch.nn.functional.conv1d(e1, f1, padding='same').view(-1)
-                convolved_signal[i,:] = out
-            convolved_batch.append(convolved_signal)
+        batch_encoded = batch_encoded.detach().cpu().numpy()
+        # if not isinstance(f, torch.Tensor):
+        #     f = torch.from_numpy()
+        # f1 = torch.flip(f, (0,)).view(1, 1, -1)
+        # for b in range(batch_encoded.shape[0]):
+        #     encoded = torch.squeeze(batch_encoded[b,:,:])
+        #     convolved_signal = torch.empty(encoded.shape)
+        #     for i in range(encoded.shape[0]):
+        #         e = torch.squeeze(encoded[i,:])
+        #         e1 = e.view(1, 1, -1)
+        #         out = torch.nn.functional.conv1d(e1, f1, padding='same').view(-1)
+        #         convolved_signal[i,:] = out
+        #     convolved_batch.append(convolved_signal)
 
-        convolved_batch = torch.stack(convolved_batch)
-        print(convolved_batch.shape)
-    else:
-        for b in range(batch_encoded.shape[0]):
-            encoded = np.squeeze(batch_encoded[b,:,:])
-            convolved_signal = np.empty_like(encoded)
-            for i in range(encoded.shape[0]):
-                e = np.squeeze(encoded[i,:])
-                convolved_signal[i,:] = np.convolve(e, f, mode='same')
-            convolved_batch.append(convolved_signal)
+        # convolved_batch = torch.stack(convolved_batch)
+        # print(convolved_batch.shape)
+    #else:
+    for b in range(batch_encoded.shape[0]):
+        encoded = np.squeeze(batch_encoded[b,:,:])
+        convolved_signal = np.apply_along_axis(np.convolve,axis=0,arr=encoded,v=f,mode='same')
+        print(convolved_signal.shape)
+        #for i in range(encoded.shape[0]):
+         #   e = np.squeeze(encoded[i,:])
+          #  convolved_signal[i,:] = np.convolve(e, f, mode='same')
+        convolved_batch.append(convolved_signal)
 
-        convolved_batch = np.stack(convolved_batch)
+    convolved_batch = np.stack(convolved_batch)
     
     return convolved_batch
 
