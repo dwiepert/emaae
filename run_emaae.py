@@ -92,7 +92,7 @@ if __name__ == "__main__":
                                 help='Specify sparsity loss type [l1, tvl2, filter].')
     train_args.add_argument('--cutoff_freq', type=float, default=0.2,
                             help='Cutoff frequency for low pass filter training')
-    train_args.add_argument('--ntaps', type=int, default=51,
+    train_args.add_argument('--n_taps', type=int, default=51,
                             help='n_taps for firwin filter')
     train_args.add_argument('--weight_penalty', action='store_true',
                                 help='Specify whether to add a penalty based on model weights.')
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'initial_ekernel':args.initial_ekernel, 'n_decoder':args.n_decoder, 'initial_dkernel':args.initial_dkernel, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
-                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'ntaps':args.ntaps}
+                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'n_taps':args.n_taps}
 
     if args.eval_only:
         args.lr = model_config['learning_rate']
@@ -257,7 +257,7 @@ if __name__ == "__main__":
                       device=device, optim=optim, criterion=criterion, lr_scheduler=scheduler, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
                       early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty,
-                      filter_loss=filter_loss, filter_cuttoff=args.cutoff_freq, ntaps=args.ntaps)
+                      filter_loss=filter_loss, filter_cuttoff=args.cutoff_freq, ntaps=args.n_taps)
         
         #SAVE FINAL TRAINED MODEL
         mpath = save_path / 'models'
