@@ -67,7 +67,7 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
     if f is None:
         f = firwin(numtaps=ntaps,cutoff=c)
     if not isinstance(batch_encoded, np.ndarray):
-        if not isinstance(f, torch.tensor):
+        if not isinstance(f, torch.Tensor):
             f = torch.from_numpy()
         for b in range(batch_encoded.shape[0]):
             encoded = torch.squeeze(batch_encoded[b,:,:])
