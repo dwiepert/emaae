@@ -68,7 +68,7 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:np.ndarray=
         f = firwin(numtaps=ntaps,cutoff=c)
     convolved_batch = []
     if not isinstance(batch_encoded, np.ndarray):
-        batch_encoded = batch_encoded.numpy()
+        batch_encoded = batch_encoded.cpu().numpy()
     for b in range(batch_encoded.shape[0]):
         encoded = np.squeeze(batch_encoded[b,:,:])
         convolved_signal = np.empty_like(encoded)
