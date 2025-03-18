@@ -103,7 +103,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         alpha_update = True
         new_epoch_counter = 0
 
-    f = torch.from_numpy(firwin(numtaps=ntaps,cutoff=filter_cutoff)).to(torch.float)
+    f = torch.from_numpy(firwin(numtaps=ntaps,cutoff=filter_cutoff)).to(torch.float).to(device)
 
     # START TRAINING
     for e in range(epochs):
