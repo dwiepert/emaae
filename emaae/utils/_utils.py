@@ -77,7 +77,7 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
             for i in range(encoded.shape[0]):
                 e = torch.squeeze(encoded[i,:])
                 e1 = e.view(1, 1, -1)
-                out = torch.nn.functional.conv1d(e1, f1, mode='same').view(-1)
+                out = torch.nn.functional.conv1d(e1, f1, padding='same').view(-1)
                 print(out.shape)
                 convolved_signal[i,:] = out
             convolved_batch.append(convolved_signal)
