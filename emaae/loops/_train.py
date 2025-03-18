@@ -122,7 +122,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             encoding = model.encode(inputs)
 
             if filter_loss:
-                encoding = torch.from_numpy(filter_encoding(encoding, f=f)).to(device)
+                encoding = torch.from_numpy(filter_encoding(encoding, f=f)).to(torch.float).to(device)
                 #encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
@@ -174,7 +174,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 vencoding = model.encode(vinputs)
 
                 if filter_loss:
-                    vencoding = torch.from_numpy(filter_encoding(vencoding, c=filter_cutoff, ntaps=ntaps, to_torch=True)).to(device)
+                    vencoding = torch.from_numpy(filter_encoding(vencoding, c=filter_cutoff, ntaps=ntaps, to_torch=True)).to(torch.float).to(device)
                     #vencoding = vencoding.to(device)
                 # DECODE 
                 voutputs = model.decode(vencoding)
