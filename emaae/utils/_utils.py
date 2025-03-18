@@ -61,7 +61,7 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
         sparsity = sparsity.item()
     return sparsity
 
-def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.ndarray]=None, c:float=0.2, ntaps:int=51, to_torch:bool=True) -> List[float]:
+def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.ndarray]=None, c:float=0.2, ntaps:int=51) -> List[float]:
     """
     """
     if f is None:
