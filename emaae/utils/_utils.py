@@ -65,6 +65,7 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
     """
     for torch tensors, expects that f and e are the same type (e.g. torch.float) and both on the device 
     """
+    convolved_batch = []
     if f is None:
         f = firwin(numtaps=ntaps,cutoff=c)
     if not isinstance(batch_encoded, np.ndarray):
