@@ -69,12 +69,16 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
     if not isinstance(batch_encoded, np.ndarray):
         if not isinstance(f, torch.Tensor):
             f = torch.from_numpy()
+        f1 = torch.flip(f, (0,)).view(1, 1, -1)
         for b in range(batch_encoded.shape[0]):
             encoded = torch.squeeze(batch_encoded[b,:,:])
             convolved_signal = torch.empty(encoded.shape)
             for i in range(encoded.shape[0]):
                 e = torch.squeeze(encoded[i,:])
-                convolved_signal[i,:] = torch.nn.functional.conv1d(e, f).view(-1)
+                e1 = e.view(1, 1, -1)
+                out = torch.nn.functional.conv1d(e1, f1).view(-1)
+                print(out.shape)
+                convolved_signal[i,:] = out
             convolved_batch.append(convolved_signal)
             convolved_batch = torch.stack(convolved_batch)
     else:
