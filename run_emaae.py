@@ -257,7 +257,7 @@ if __name__ == "__main__":
                       device=device, optim=optim, criterion=criterion, lr_scheduler=scheduler, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
                       early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty,
-                      filter_loss=filter_loss, filter_cuttoff=args.cutoff_freq, ntaps=args.n_taps)
+                      filter_loss=filter_loss, filter_cutoff=args.cutoff_freq, ntaps=args.n_taps)
         
         #SAVE FINAL TRAINED MODEL
         mpath = save_path / 'models'
