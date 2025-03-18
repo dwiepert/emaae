@@ -63,6 +63,7 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
 
 def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.ndarray]=None, c:float=0.2, ntaps:int=51) -> List[float]:
     """
+    for torch tensors, expects that f and e are the same type (e.g. torch.float) and both on the device 
     """
     if f is None:
         f = firwin(numtaps=ntaps,cutoff=c)
@@ -76,6 +77,8 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
             for i in range(encoded.shape[0]):
                 e = torch.squeeze(encoded[i,:])
                 e1 = e.view(1, 1, -1)
+                print(e1.shape)
+                print(f1.shape)
                 out = torch.nn.functional.conv1d(e1, f1).view(-1)
                 print(out.shape)
                 convolved_signal[i,:] = out
