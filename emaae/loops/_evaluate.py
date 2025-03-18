@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Union, Dict, List
 ##third party
 import numpy as np
-from scipy.signal import firwin
 from sklearn.metrics import mean_squared_error
 import torch
 from torch.utils.data import DataLoader
