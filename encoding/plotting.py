@@ -228,9 +228,10 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
     order = ['TDX','TDY','TBX','TBY','TTX','TTY','LIX','LIY','ULX','ULY','LLX','LLY','Pitch']
     colors = ['teal','teal', 'purple', 'purple', 'green', 'green', 'steelblue','steelblue', 'gold','gold', 'crimson', 'crimson', 'darkorange']
     rlist = np.arange(13)*2.1
-    
+    d = []
     for i in range(len(files)):
         if i < 10:
+            d.append(files[i])
             orig = test_feats[files[i]]
             orig = orig[:,mask]
             pred = rfeats[files[i]]
@@ -257,10 +258,10 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
             plt.title('Original vs. reconstructed EMA features')
             plt.savefig(str(save_path / f'reconstruction{i}'), dpi=300)
             plt.close()
-
+    return d
         #print('pause')
 
-def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=0.1):
+def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=0.1, flist=[]):
     root = Path(root)
     enc_root = root / 'encodings'
     enc_files = enc_root.glob('*.pt')
@@ -276,17 +277,25 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=
 
     test_dataset = EMADataset(root_dir=original, recursive=True, cci_features=None)
     test_feats = test_dataset.features
-    files = list(test_feats.keys())
 
-    for f in enc_files:
-        encoding = torch.load(f).numpy()
+    rfeats = {}
+    for r in enc_files:
+        name = r.name.replace('.pt','')
+        rfeats[name] = np.transpose(np.squeeze(torch.load(r).numpy()))
+
+    if flist == []:
+        files = list(test_feats.keys())
+    else:
+        files = flist
+
+    for f in list(rfeats.keys()):
+        encoding = rfeats[f]
         enc_flattened = encoding.flatten()
         k.append(kurtosis(enc_flattened))
         encodings.append(encoding)
         encodings_flattened.append(enc_flattened)
 
-        name = f.name.replace('.pt','')
-        feat = test_feats[name]
+        feat = test_feats[f]
         feat = feat[:,mask]
         padded = np.pad(feat, (0,(1024-13)), mode='constant', constant_values=0)
         baselinek.append(kurtosis(padded.flatten()))
@@ -310,13 +319,13 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=
     plt.clf()
     plt.close()
 
-
-    for i in range(len(encodings)):
+    i = 0
+    for f in files:
         if i < 10:
             new_save = save_path / 'imshow'
             new_save.mkdir(exist_ok=True)
             plt.style.use('default')
-            e = np.squeeze(encodings[i])
+            e = np.transpose(np.squeeze(rfeats[f]))
             plt.imshow(e)
             plt.ylabel('Encoding dimension')
             plt.xlabel('Time')
@@ -328,7 +337,6 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=
             new_save = save_path / 'spy'
             new_save.mkdir(exist_ok=True)
             plt.style.use('default')
-            e = np.squeeze(encodings[i])
             plt.spy(e)
             plt.ylabel('Encoding dimension')
             plt.xlabel('Time')
@@ -348,6 +356,7 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=
             plt.savefig(str(new_save / f'activationvtime{i}.png'),dpi=300)
             plt.clf()
             plt.close()
+        i += 1
 
 def round_sig(x, digits):
     if x == 0:
@@ -361,7 +370,7 @@ def round_sig(x, digits):
 def plot_weights(root):
     pass
 
-def plot_psd(root):
+def plot_psd(root, flist=[]):
     root=Path(root)
     enc_root = root / 'encodings'
     enc_files = enc_root.glob('*.pt')
@@ -372,9 +381,18 @@ def plot_psd(root):
     i = 0
     avg_psd = None
     avg_freq = None
-    for f in enc_files:
+
+    rfeats = {}
+    for r in enc_files:
+        name = r.name.replace('.pt','')
+        rfeats[name] = np.transpose(np.squeeze(torch.load(r).numpy()))
+    if flist != []:
+        files = flist
+    else:
+        files = list(rfeats.keys())
+    for f in files:
         if i < 10:
-            encoding = np.squeeze(torch.load(f).numpy())
+            encoding = rfeats[f]
             x_vals = []
             y_vals = None
             for j in range(encoding.shape[0]):
@@ -456,15 +474,15 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.25_earlystop_bnf'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e500bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf'
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
 plot_logs(root)
 plot_filtermse(root)
-plot_reconstructions(root, test_ema)
+d = plot_reconstructions(root, test_ema)
 #filtermse_baseline(test_ema)
-plot_psd(root)
-plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7)
+plot_psd(root, flist=d)
+plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7, flist=d)
 
 
 

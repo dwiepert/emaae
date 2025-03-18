@@ -22,7 +22,8 @@ class CNNAutoEncoder(nn.Module):
     :param n_decoder: int, number of decoder blocks (default = 5)
     :param inner_size: int, size of encoded representations (default = 1024)
     """
-    def __init__(self, input_dim:int=13, n_encoder:int=5, n_decoder:int=5, inner_size:int=1024, batchnorm_first:bool=True, final_tanh:bool=False, initial_ekernel:int=5, initial_dkernel:int=5):
+    def __init__(self, input_dim:int=13, n_encoder:int=5, n_decoder:int=5, inner_size:int=1024, batchnorm_first:bool=True, 
+                 final_tanh:bool=False, initial_ekernel:int=5, initial_dkernel:int=5, exclude_final_norm:bool=False):
         super(CNNAutoEncoder, self).__init__()
         print(f'{n_encoder} encoder layers, {n_decoder} decoder layers, {inner_size} inner dims.')
         self.initial_ekernel=initial_ekernel
@@ -42,9 +43,10 @@ class CNNAutoEncoder(nn.Module):
 
         self.batchnorm_first = batchnorm_first
         self.final_tanh = final_tanh
+        self.exclude_final_norm = exclude_final_norm
         self.encoder_params = self._encoder_block_options()
         self.decoder_params = self._decoder_block_options()
-        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_relu=True, exclude_final_norm=False, batchnorm_first=self.batchnorm_first, final_tanh=False)), ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_relu=True, exclude_final_norm=True, batchnorm_first=self.batchnorm_first, final_tanh=self.final_tanh)) ]))
+        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_relu=True, exclude_final_norm=self.exclude_final_norm, batchnorm_first=self.batchnorm_first, final_tanh=False)), ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_relu=True, exclude_final_norm=True, batchnorm_first=self.batchnorm_first, final_tanh=self.final_tanh)) ]))
 
     def _encoder_block_options(self):
         """

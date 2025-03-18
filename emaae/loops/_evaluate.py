@@ -18,9 +18,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
-from emaae.utils import fro_norm3d, calc_sparsity
+from emaae.utils import fro_norm3d, calc_sparsity, get_filters, filter_encoding
 
-def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, encode:bool=True, decode:bool=True) -> Dict[str,List[float]]:
+def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, 
+             encode:bool=True, decode:bool=True, n_filters:int=20, ntaps:int=51) -> Dict[str,List[float]]:
     """
     Evaluate mean squared error and sparsity (number of zero entries)
 
@@ -39,7 +40,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     sparsity = []
     model.eval()
 
-    filters, cutoffs = get_filters()
+    filters, cutoffs = get_filters(n_filters=n_filters, ntaps=ntaps)
 
     # LOOK AT WEIGHTS
     weights = model.get_weights()
@@ -74,7 +75,7 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
             mse.append(mean_squared_error(targets, outputs))
-            
+
             encoded = np.squeeze(encoded.cpu().numpy())
             #encodings.append(encoded)
             sparsity.append(calc_sparsity(encoded))
@@ -105,35 +106,18 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     return metrics
 
 
-def get_filters():
-    """
-    """
-    filters = []
-    cutoffs = np.linspace((1/20),1,20, endpoint=False)
-    for c in cutoffs:
-        filters.append(firwin(numtaps=51,cutoff=c))
-    return filters, cutoffs
-
-
 def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray], model:CNNAutoEncoder, device) -> List[float]:
     """"""
+    encoded = np.expand_dims(encoded, axis=0)
     mse = []
-
     for f in filters:
-        convolved_signal = np.empty_like(encoded)
-        for i in range(encoded.shape[0]):
-            e = np.squeeze(encoded[i,:])
-            convolved_signal[i,:] = np.convolve(e, f, mode='same')
-
+        new_encoded = filter_encoding(encoded, f=f, to_torch=True)
         if model is not None:
-            convolved_signal = np.expand_dims(convolved_signal, 0)
-            convolved_signal = torch.from_numpy(convolved_signal)
-            convolved_signal = convolved_signal.to(device)
-
-            outputs = model.decode(convolved_signal)
+            new_encoded = new_encoded.to(device)
+            outputs = model.decode(new_encoded)
             outputs = np.squeeze(outputs.cpu().numpy())
         else: 
-            outputs = convolved_signal
+            outputs = new_encoded
 
         mse.append(mean_squared_error(targets, outputs))
 

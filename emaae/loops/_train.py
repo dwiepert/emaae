@@ -18,7 +18,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
 ##local
 from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
-from emaae.utils import calc_sparsity
+from emaae.utils import calc_sparsity, filter_encoding
 
 def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
@@ -67,7 +67,8 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
           optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
-          epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False) -> Union[CNNAutoEncoder]:
+          epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False, 
+          filter_loss:bool=False, filter_cutoff:float=0.2, ntaps:int=51) -> Union[CNNAutoEncoder]:
     """
     Train a model
 
@@ -117,6 +118,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             # ENCODE
             encoding = model.encode(inputs)
 
+            if filter_loss:
+                encoding = filter_encoding(encoding, c=filter_cutoff, ntaps=ntaps, to_torch=True)
+                encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
             
@@ -166,6 +170,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 # ENCODE
                 vencoding = model.encode(vinputs)
 
+                if filter_loss:
+                    vencoding = filter_encoding(vencoding, c=filter_cutoff, ntaps=ntaps, to_torch=True)
+                    vencoding = vencoding.to(device)
                 # DECODE 
                 voutputs = model.decode(vencoding)
 

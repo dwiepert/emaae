@@ -59,3 +59,35 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
         sparsity = (te-nz)/te
         sparsity = sparsity.item()
     return sparsity
+
+def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:np.ndarray=None, c:float=0.2, ntaps:int=51, to_torch:bool=True) -> List[float]:
+    """
+    """
+    if f is None:
+        f = firwin(numtaps=ntaps,cutoff=c)
+    convolved_batch = []
+    if not isinstance(batch_encoded, np.ndarray):
+        batch_encoded = batch_encoded.numpy()
+    for b in range(batch_encoded.shape[0]):
+        encoded = np.squeeze(batch_encoded[b,:,:])
+        convolved_signal = np.empty_like(encoded)
+        for i in range(encoded.shape[0]):
+            e = np.squeeze(encoded[i,:])
+            convolved_signal[i,:] = np.convolve(e, f, mode='same')
+        convolved_batch.append(convolved_signal)
+
+    convolved_batch = np.stack(convolved_batch)
+    
+    if to_torch:
+        convolved_batch = torch.from_numpy(convolved_batch)
+
+    return convolved_batch
+
+def get_filters(n_filters:int=20, ntaps:int=51):
+    """
+    """
+    filters = []
+    cutoffs = np.linspace((1/n_filters),1,n_filters, endpoint=False)
+    for c in cutoffs:
+        filters.append(firwin(numtaps=ntaps,cutoff=c))
+    return filters, cutoffs

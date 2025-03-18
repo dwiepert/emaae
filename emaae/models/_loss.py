@@ -42,6 +42,8 @@ class SparseLoss(nn.Module):
             self.loss2 = nn.L1Loss()
         if self.loss2_type == 'tvl2':
             self.loss2 = self._tvl2
+        if self.loss2_type == 'filter':
+            self.loss2 = None
         else:
             raise NotImplementedError(f'{self.loss2_type} is not an implemented sparsity loss function.')
         
@@ -106,17 +108,22 @@ class SparseLoss(nn.Module):
             enc_target = torch.zeros(encoded.shape)
         elif self.loss2_type == 'tvl2':
             enc_target = encoded[:,:,1:]
+
+        if self.loss2_type != 'filter':
             #print(enc_target.shape)
             #enc_target = torch.roll(encoded, shifts=1, dims=2)
-        enc_target.to(self.device)
+            enc_target.to(self.device)
 
-        loss2 = self.loss2(encoded, enc_target) 
+            loss2 = self.loss2(encoded, enc_target) 
+            self.track_loss2.append(loss2.item())
 
-        total_loss = (1-self.alpha)*loss1 + self.alpha*loss2
+            total_loss = (1-self.alpha)*loss1 + self.alpha*loss2
+        else:
+            total_loss = loss1
+            self.track_loss2.append(None)
 
         self.track_alpha.append(self.alpha)
         self.track_loss1.append(loss1.item())
-        self.track_loss2.append(loss2.item())
         self.track_sparsity.append(calc_sparsity(encoded))
 
         if self.weight_penalty:

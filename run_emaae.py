@@ -64,6 +64,8 @@ if __name__ == "__main__":
                                 help='Size of initial kernel to decoding block.')
     model_args.add_argument('--batchnorm_first', action='store_true',
                                 help='Indicate whether to use batchnorm before or after nonlinearity.')
+    model_args.add_argument('--exclude_final_norm', action='store_true',
+                                help='Indicate whether to exclude final normalization layer before encoding.')
     model_args.add_argument('--final_tanh', action='store_true',
                                 help='Indicate whether to use tanh activation as final part of decoder.')
     model_args.add_argument('--checkpoint', type=str, default=None, 
@@ -87,7 +89,11 @@ if __name__ == "__main__":
     train_args.add_argument('--autoencoder_loss', type=str, default='mse',
                                 help='Specify base autoencoder loss type.')
     train_args.add_argument('--sparse_loss', type=str, default='tvl2',
-                                help='Specify sparsity loss type [l1, tvl2].')
+                                help='Specify sparsity loss type [l1, tvl2, filter].')
+    train_args.add_argument('--cutoff_freq', type=float, default=0.2,
+                            help='Cutoff frequency for low pass filter training')
+    train_args.add_argument('--ntaps', type=int, default=51,
+                            help='n_taps for firwin filter')
     train_args.add_argument('--weight_penalty', action='store_true',
                                 help='Specify whether to add a penalty based on model weights.')
     train_args.add_argument('--alpha', type=float, default=0.25,
@@ -135,7 +141,11 @@ if __name__ == "__main__":
     # save_path = args.out_dir / name_str
     # save_path.mkdir(exist_ok=True)
     #print('Saving results to:', save_path)
-
+    if args.sparse_loss == 'filter':
+        assert args.cutoff_freq is not None and args.n_taps is not None
+        filter_loss = True
+    else:
+        filter_loss = False
     # PREP VARIABLES
     ## SET ALPHA
     if args.update and not args.early_stop:
@@ -171,7 +181,7 @@ if __name__ == "__main__":
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'initial_ekernel':args.initial_ekernel, 'n_decoder':args.n_decoder, 'initial_dkernel':args.initial_dkernel, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
-                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr}
+                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'ntaps':args.ntaps}
 
     if args.eval_only:
         args.lr = model_config['learning_rate']
@@ -193,9 +203,15 @@ if __name__ == "__main__":
         args.n_decoder = model_config['n_decoder']
         args.initial_ekernel = model_config['initial_ekernel']
         args.initial_dkernel = model_config['initial_dkernel']
+        args.cutoff_freq = model_config['cutoff_freq']
+        args.n_taps = model_config['n_taps']
+        ##NTAPS CUTOFF FREQ
 
 
     name_str =  f'model_e{args.n_encoder}_iek{args.initial_ekernel}_d{args.n_decoder}_idk{args.initial_dkernel}_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
+    if args.sparse_loss == 'filter':
+        name_str += f'c{args.cutoff_freq}n{args.n_taps}'
+    ### LOSS - CUTOFF FREQ
     if args.alpha is not None:
         name_str += f'_a{args.alpha}'
     if args.weight_penalty:
@@ -239,7 +255,8 @@ if __name__ == "__main__":
         model = train(train_loader=train_loader, val_loader=val_loader, model=model, 
                       device=device, optim=optim, criterion=criterion, lr_scheduler=scheduler, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
-                      early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty)
+                      early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty,
+                      filter_loss=filter_loss, filter_cuttoff=args.cutoff_freq, ntaps=args.ntaps)
         
         #SAVE FINAL TRAINED MODEL
         mpath = save_path / 'models'
