@@ -103,7 +103,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         alpha_update = True
         new_epoch_counter = 0
 
-    f = firwin(numtaps=ntaps,cutoff=filter_cutoff)
+    firwin_filter = firwin(numtaps=ntaps,cutoff=filter_cutoff)
 
     # START TRAINING
     for e in range(epochs):
@@ -122,7 +122,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             encoding = model.encode(inputs)
 
             if filter_loss:
-                encoding = torch.from_numpy(filter_encoding(encoding, f=f)).to(torch.float).to(device)
+                encoding = torch.from_numpy(filter_encoding(encoding, f=firwin_filter)).to(torch.float).to(device)
                 #encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
@@ -174,7 +174,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 vencoding = model.encode(vinputs)
 
                 if filter_loss:
-                    vencoding = torch.from_numpy(filter_encoding(vencoding, c=filter_cutoff, ntaps=ntaps)).to(torch.float).to(device)
+                    vencoding = torch.from_numpy(filter_encoding(vencoding, f=firwin_filter, c=filter_cutoff, ntaps=ntaps)).to(torch.float).to(device)
                     #vencoding = vencoding.to(device)
                 # DECODE 
                 voutputs = model.decode(vencoding)
