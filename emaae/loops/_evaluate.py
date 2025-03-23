@@ -112,7 +112,7 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
     for f in filters:
         new_encoded = filter_encoding(encoded, f=f)
         if model is not None:
-            new_encoded = torch.from_numpy(new_encoded).to(device)
+            new_encoded = torch.from_numpy(new_encoded).to(torch.float).to(device)
             outputs = model.decode(new_encoded)
             outputs = np.squeeze(outputs.cpu().numpy())
         else: 
