@@ -118,7 +118,7 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
         
         # print(f'filter: {f.shape}')
         # print(f'encoded: {encoded.shape}')
-        print(f'new_encoded: {new_encoded.shape}')
+        #print(f'new_encoded: {new_encoded.shape}')
         # print(f'output: {outputs.shape}')
         # print(f'target: {targets.shape}')
         
