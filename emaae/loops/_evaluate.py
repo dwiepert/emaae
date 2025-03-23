@@ -109,6 +109,7 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
     """"""
     encoded = np.expand_dims(encoded, axis=0)
     mse = []
+    i = 0
     for f in filters:
         new_encoded = filter_encoding(encoded, f=f)
         if model is not None:
@@ -117,11 +118,15 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
             outputs = np.squeeze(outputs.cpu().numpy())
         else: 
             outputs = new_encoded
-        print(f'filter: {f}')
-        print(f'new_encoded: {new_encoded.shape}')
-        print(f'output: {outputs.shape}')
-        print(f'target: {targets.shape}')
-        mse.append(mean_squared_error(targets, outputs))
+        try:
+            mse.append(mean_squared_error(targets, outputs))
+            i+=1
+        except:
+            print(i)
+            print(f'filter: {f.shape}')
+            print(f'new_encoded: {new_encoded.shape}')
+            print(f'output: {outputs.shape}')
+            print(f'target: {targets.shape}')
 
     return np.asarray(mse)
 
