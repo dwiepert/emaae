@@ -90,8 +90,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             #freqs.append(frequencies)
             #psd.append(psd)
     
-
-
     # SAVE METRICS
     filtered_mse = np.asarray(filtered_mse)
     baseline_filtered = np.asarray(baseline_filtered)
@@ -105,7 +103,6 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
 
     return metrics
 
-
 def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray], model:CNNAutoEncoder, device) -> List[float]:
     """"""
     encoded = np.expand_dims(encoded, axis=0)
@@ -117,16 +114,15 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
             outputs = model.decode(new_encoded)
             outputs = np.squeeze(outputs.cpu().numpy())
         else: 
-            outputs = new_encoded
+            outputs = np.squeeze(new_encoded)
         
-        print(f'filter: {f.shape}')
-        print(f'encoded: {encoded.shape}')
+        # print(f'filter: {f.shape}')
+        # print(f'encoded: {encoded.shape}')
         print(f'new_encoded: {new_encoded.shape}')
-        print(f'output: {outputs.shape}')
-        print(f'target: {targets.shape}')
+        # print(f'output: {outputs.shape}')
+        # print(f'target: {targets.shape}')
         
         mse.append(mean_squared_error(targets, outputs))
-
 
     return np.asarray(mse)
 

@@ -88,10 +88,12 @@ def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.nd
     #else:
     for b in range(batch_encoded.shape[0]):
         encoded = np.squeeze(batch_encoded[b,:,:])
-        convolved_signal = np.apply_along_axis(np.convolve,axis=0,arr=encoded,v=f,mode='same')
-        #for i in range(encoded.shape[0]):
-         #   e = np.squeeze(encoded[i,:])
-          #  convolved_signal[i,:] = np.convolve(e, f, mode='same')
+        #convolved_signal = np.apply_along_axis(np.convolve,axis=0,arr=encoded,v=f,mode='same')
+        convolved_signal = np.empty(encoded.shape)
+        for i in range(encoded.shape[0]):
+           e = np.squeeze(encoded[i,:])
+           convolved_signal[i,:] = np.convolve(e, f, mode='same')
+        
         convolved_batch.append(convolved_signal)
 
     convolved_batch = np.stack(convolved_batch)
