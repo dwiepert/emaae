@@ -82,7 +82,8 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             ### PSD and low pass filtering 
             fm = sweep_filters(encoded, targets, filters, model, device)
             filtered_mse.append(fm)
-
+            
+            print('baseline filtering')
             bfm = sweep_filters(targets, targets, filters, model=None, device=None)
             baseline_filtered.append(bfm)
             #frequencies, psd = welch(encoded, 50)
@@ -109,7 +110,6 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
     """"""
     encoded = np.expand_dims(encoded, axis=0)
     mse = []
-    i = 0
     for f in filters:
         new_encoded = filter_encoding(encoded, f=f)
         if model is not None:
@@ -119,14 +119,13 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
         else: 
             outputs = new_encoded
         
-        print(i)
         print(f'filter: {f.shape}')
+        print(f'encoded: {encoded.shape}')
         print(f'new_encoded: {new_encoded.shape}')
         print(f'output: {outputs.shape}')
         print(f'target: {targets.shape}')
         
         mse.append(mean_squared_error(targets, outputs))
-        i+=1
 
 
     return np.asarray(mse)
