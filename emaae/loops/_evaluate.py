@@ -114,13 +114,12 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
         if model is not None:
             new_encoded = torch.from_numpy(new_encoded).to(torch.float).to(device)
             outputs = model.decode(new_encoded)
-            print(outputs.shape)
             outputs = np.squeeze(outputs.cpu().numpy())
-            print(outputs.shape)
         else: 
             outputs = new_encoded
-
-        print(targets.shape)
+        
+        print(f'output: {outputs.shape}')
+        print(f'target: {targets.shape}')
         mse.append(mean_squared_error(targets, outputs))
 
     return np.asarray(mse)
