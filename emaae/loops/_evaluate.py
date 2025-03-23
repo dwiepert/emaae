@@ -110,7 +110,7 @@ def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray
     encoded = np.expand_dims(encoded, axis=0)
     mse = []
     for f in filters:
-        new_encoded = filter_encoding(encoded, f=f, to_torch=True)
+        new_encoded = filter_encoding(encoded, f=f)
         if model is not None:
             new_encoded = new_encoded.to(device)
             outputs = model.decode(new_encoded)
