@@ -62,7 +62,7 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
         sparsity = sparsity.item()
     return sparsity
 
-def filter_encoding(batch_encoded:torch.tensor, f_matrix:torch.tensor=None, c:float=0.2, ntaps:int=51, to_numpy:bool=False) -> torch.tensor:
+def filter_encoding(batch_encoded:torch.tensor, device=None, f_matrix:torch.tensor=None, c:float=0.2, ntaps:int=51, to_numpy:bool=False) -> torch.tensor:
     """
     """
     t = batch_encoded.shape[-1]
@@ -71,6 +71,7 @@ def filter_encoding(batch_encoded:torch.tensor, f_matrix:torch.tensor=None, c:fl
     else:
         f_matrix = f_matrix[:t,:t]
     
+    f_matrix = f_matrix.to(device)
     filtered = torch.matmul(batch_encoded, f_matrix)
     if to_numpy:
         return filtered.cpu().numpy()

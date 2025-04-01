@@ -124,7 +124,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             encoding = model.encode(inputs)
 
             if filter_loss:
-                encoding = filter_encoding(encoding, f_matrix=conv_matrix, ntaps=ntaps, c=filter_cutoff).to(device)
+                encoding = filter_encoding(encoding, device=device, f_matrix=conv_matrix, ntaps=ntaps, c=filter_cutoff).to(device)
                 #encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
@@ -176,7 +176,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 vencoding = model.encode(vinputs)
 
                 if filter_loss:
-                    vencoding = filter_encoding(vencoding, f_matrix=conv_matrix, c=filter_cutoff, ntaps=ntaps).to(device)
+                    vencoding = filter_encoding(vencoding, device=device, f_matrix=conv_matrix, c=filter_cutoff, ntaps=ntaps).to(device)
                     #vencoding = vencoding.to(device)
                 # DECODE 
                 voutputs = model.decode(vencoding)
