@@ -28,7 +28,7 @@ def load_features(feature_dir:Union[str,Path], cci_features=None, recursive:bool
     :return: loaded and split feature dictionary
     """
     warnings.filterwarnings("ignore", category=UserWarning, module="cottoncandy")
-
+    maxlength = 0
     feature_dir = Path(feature_dir)
     if cci_features is None:
         if recursive:
@@ -78,15 +78,18 @@ def load_features(feature_dir:Union[str,Path], cci_features=None, recursive:bool
     features = {}
     for f in paths:
         if cci_features is not None:
-            features[f] = cci_features.download_raw_array(f)
+            loaded = cci_features.download_raw_array(f)
         else:
             l = np.load(f)
             key = list(l)[0]
-            features[f] = l[key]
+            loaded = l[key]
+        if loaded.shape[0] > maxlength:
+            maxlength= loaded.shape[0]
+        features[f] = loaded
     
     features['path_list'] = paths
     
-    return split_features(features)
+    return split_features(features), maxlength
 
 
 

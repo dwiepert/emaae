@@ -32,7 +32,12 @@ class ProcessEMA():
         :return sample: dict, transformed sample
         """
         temp = sample['features']
-        sample['features'] = temp[:,self.mask]
+        masked = temp[:, self.mask]
+        norm_ema = np.empty((masked.shape), dtype=masked.dtype)
+        for j in range(masked.shape[1]):
+            jcol = masked[:,j]
+            norm_ema[:,j] = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
+        sample['features'] = norm_ema
         return sample
     
 class ToTensor():
@@ -64,9 +69,9 @@ class EMADataset(Dataset):
         """
         Load features
         """
-        self.features = load_features(feature_dir=self.root_dir, cci_features=self.cci_features,
+        self.features, self.maxt = load_features(feature_dir=self.root_dir, cci_features=self.cci_features,
                           recursive=self.recursive,ignore_str='times')
-        self.times = load_features(feature_dir=self.root_dir, cci_features=self.cci_features,
+        self.times,_ = load_features(feature_dir=self.root_dir, cci_features=self.cci_features,
                             recursive=self.recursive,search_str='times')
         #data = align_times(features, times)
     

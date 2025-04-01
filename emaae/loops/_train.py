@@ -19,7 +19,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
 ##local
 from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
-from emaae.utils import calc_sparsity, filter_encoding
+from emaae.utils import calc_sparsity, filter_encoding, filter_matrix
 
 def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
@@ -69,7 +69,7 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
           optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
           epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False, 
-          filter_loss:bool=False, filter_cutoff:float=0.2, ntaps:int=51) -> Union[CNNAutoEncoder]:
+          filter_loss:bool=False, maxt:int=None, filter_cutoff:float=0.2, ntaps:int=51) -> Union[CNNAutoEncoder]:
     """
     Train a model
 
@@ -103,7 +103,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         alpha_update = True
         new_epoch_counter = 0
 
-    firwin_filter = firwin(numtaps=ntaps,cutoff=filter_cutoff)
+    if filter_loss:
+        assert (maxt is not None)
+        conv_matrix = filter_matrix(t=maxt, ntaps=ntaps, c=filter_cutoff)
 
     # START TRAINING
     for e in range(epochs):
@@ -122,7 +124,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             encoding = model.encode(inputs)
 
             if filter_loss:
-                encoding = torch.from_numpy(filter_encoding(encoding, f=firwin_filter)).to(torch.float).to(device)
+                encoding = filter_encoding(encoding, f_matrix=conv_matrix, ntaps=ntaps, c=filter_cutoff).to(device)
                 #encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
@@ -174,7 +176,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                 vencoding = model.encode(vinputs)
 
                 if filter_loss:
-                    vencoding = torch.from_numpy(filter_encoding(vencoding, f=firwin_filter, c=filter_cutoff, ntaps=ntaps)).to(torch.float).to(device)
+                    vencoding = filter_encoding(vencoding, f_matrix=conv_matrix, c=filter_cutoff, ntaps=ntaps).to(device)
                     #vencoding = vencoding.to(device)
                 # DECODE 
                 voutputs = model.decode(vencoding)

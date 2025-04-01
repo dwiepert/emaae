@@ -257,7 +257,7 @@ if __name__ == "__main__":
                       device=device, optim=optim, criterion=criterion, lr_scheduler=scheduler, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
                       early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty,
-                      filter_loss=filter_loss, filter_cutoff=args.cutoff_freq, ntaps=args.n_taps)
+                      filter_loss=filter_loss, maxt=max(train_dataset.maxt, val_dataset.maxt),filter_cutoff=args.cutoff_freq, ntaps=args.n_taps)
         
         #SAVE FINAL TRAINED MODEL
         mpath = save_path / 'models'
@@ -295,4 +295,5 @@ if __name__ == "__main__":
     #     save_path.mkdir(exist_ok=True)
        
     print('Saving results to:', save_path)
-    metrics = evaluate(test_loader=test_loader, model=model, save_path=save_path, device=device, encode=args.encode, decode=args.decode)
+    metrics = evaluate(test_loader=test_loader, maxt=test_dataset.maxt, model=model, save_path=save_path, device=device, 
+                       encode=args.encode, decode=args.decode,n_filters=20,ntaps=args.n_taps)

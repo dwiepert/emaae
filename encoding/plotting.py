@@ -128,42 +128,43 @@ def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variati
     plt.clf()
 
     ### Sparsity loss only
-    loss = logs[['epoch', loss_type, 'type']]
-    loss = loss.groupby(['epoch','type']).mean()
-    #loss = loss.sort_values(by='epoch')
-    loss = loss.reset_index()
+    if loss_type is not None:
+        loss = logs[['epoch', loss_type, 'type']]
+        loss = loss.groupby(['epoch','type']).mean()
+        #loss = loss.sort_values(by='epoch')
+        loss = loss.reset_index()
 
-    tl = loss[loss['type']=='train']
-    vl = loss[loss['type']=='val']
-    plt.plot(tl['epoch'].tolist(), tl[loss_type].tolist(),color='black', label='Train')
-    plt.plot(vl['epoch'].tolist(), vl[loss_type].tolist(), color='crimson', linestyle='--', label='Validation')
-    plt.xlabel('Epoch')
-    plt.ylabel(f'{loss_label}')
-    plt.legend()
-    plt.title(f'{loss_label} across epochs', loc='center')
-    plt.savefig(str(save / f'{loss_type}.png'), dpi=300)
-    plt.clf()
+        tl = loss[loss['type']=='train']
+        vl = loss[loss['type']=='val']
+        plt.plot(tl['epoch'].tolist(), tl[loss_type].tolist(),color='black', label='Train')
+        plt.plot(vl['epoch'].tolist(), vl[loss_type].tolist(), color='crimson', linestyle='--', label='Validation')
+        plt.xlabel('Epoch')
+        plt.ylabel(f'{loss_label}')
+        plt.legend()
+        plt.title(f'{loss_label} across epochs', loc='center')
+        plt.savefig(str(save / f'{loss_type}.png'), dpi=300)
+        plt.clf()
 
-    tl = loss[loss['type']=='train']
-    vl = loss[loss['type']=='val']
-    plt.plot(tl['epoch'].tolist(), [np.log(i) for i in tl[loss_type].tolist()],color='black', label='Train')
-    plt.plot(vl['epoch'].tolist(), [np.log(i) for i in vl[loss_type].tolist()], color='crimson', linestyle='--', label='Validation')
-    plt.xlabel('Epoch')
-    plt.ylabel(f'Log {loss_label}')
-    plt.legend()
-    plt.title(f'Log {loss_label} across epochs', loc='center')
-    plt.savefig(str(save / f'log_{loss_type}.png'), dpi=300)
-    plt.clf()
-    #plt.show()
+        tl = loss[loss['type']=='train']
+        vl = loss[loss['type']=='val']
+        plt.plot(tl['epoch'].tolist(), [np.log(i) for i in tl[loss_type].tolist()],color='black', label='Train')
+        plt.plot(vl['epoch'].tolist(), [np.log(i) for i in vl[loss_type].tolist()], color='crimson', linestyle='--', label='Validation')
+        plt.xlabel('Epoch')
+        plt.ylabel(f'Log {loss_label}')
+        plt.legend()
+        plt.title(f'Log {loss_label} across epochs', loc='center')
+        plt.savefig(str(save / f'log_{loss_type}.png'), dpi=300)
+        plt.clf()
+        #plt.show()
 
-    plt.plot(tl['epoch'].tolist()[1:], tl[loss_type].tolist()[1:],color='black', label='Train')
-    plt.plot(vl['epoch'].tolist()[1:], vl[loss_type].tolist()[1:], color='crimson', linestyle='--', label='Validation')
-    plt.xlabel('Epoch')
-    plt.ylabel(loss_label)
-    plt.legend()
-    plt.title(f'{loss_label} across epochs', loc='center')
-    plt.savefig(str(save / f'{loss_type}_e1.png'), dpi=300)
-    plt.clf()
+        plt.plot(tl['epoch'].tolist()[1:], tl[loss_type].tolist()[1:],color='black', label='Train')
+        plt.plot(vl['epoch'].tolist()[1:], vl[loss_type].tolist()[1:], color='crimson', linestyle='--', label='Validation')
+        plt.xlabel('Epoch')
+        plt.ylabel(loss_label)
+        plt.legend()
+        plt.title(f'{loss_label} across epochs', loc='center')
+        plt.savefig(str(save / f'{loss_type}_e1.png'), dpi=300)
+        plt.clf()
 
     ### Plot sparsity
     sparsity = logs[['epoch', 'sparsity', 'type']]
@@ -474,10 +475,10 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e500bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e101bs16_adamw_mse_filterc0.2n51_a1_earlystop_bnf'
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
-plot_logs(root)
+plot_logs(root, loss_type=None)
 plot_filtermse(root)
 d = plot_reconstructions(root, test_ema)
 #filtermse_baseline(test_ema)

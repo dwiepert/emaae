@@ -1,4 +1,4 @@
-__version__ = '0.3.8'
+__version__ = '0.4.0'
 
 #change log:
 # 0.0.0: initialized repo
@@ -16,3 +16,4 @@ __version__ = '0.3.8'
 # 0.3.6: new decoding/encoding setups
 # 0.3.7: final encoder batchnorm changed to instance norm
 # 0.3.8: filter instead of loss added
+# 0.4.0: normalization of EMA added + new filtering process

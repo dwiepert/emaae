@@ -17,9 +17,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
-from emaae.utils import fro_norm3d, calc_sparsity, get_filters, filter_encoding
+from emaae.utils import fro_norm3d, calc_sparsity, get_filters, filter_encoding, filter_matrix
 
-def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, 
+def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, 
              encode:bool=True, decode:bool=True, n_filters:int=20, ntaps:int=51) -> Dict[str,List[float]]:
     """
     Evaluate mean squared error and sparsity (number of zero entries)
@@ -39,7 +39,10 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     sparsity = []
     model.eval()
 
-    filters, cutoffs = get_filters(n_filters=n_filters, ntaps=ntaps)
+    cutoffs = np.linspace((1/n_filters),1,n_filters, endpoint=False)
+    conv_matrices = []
+    for i in range(len(cutoffs)):
+        conv_matrices.append(filter_matrix(t=maxt, ntaps=ntaps, c=cutoffs[i]))
 
     # LOOK AT WEIGHTS
     weights = model.get_weights()
@@ -75,16 +78,16 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
             outputs = np.squeeze(outputs.cpu().numpy())
             mse.append(mean_squared_error(targets, outputs))
 
-            encoded = np.squeeze(encoded.cpu().numpy())
-            #encodings.append(encoded)
-            sparsity.append(calc_sparsity(encoded))
+            # encoded = np.squeeze(encoded.cpu().numpy())
+            # #encodings.append(encoded)
+            # sparsity.append(calc_sparsity(encoded))
 
             ### PSD and low pass filtering 
-            fm = sweep_filters(encoded, targets, filters, model, device)
+            fm = sweep_filters(encoded=encoded, targets=targets, conv_matrices=conv_matrices, cutoffs=cutoffs, model=model, device=device)
             filtered_mse.append(fm)
             
             print('baseline filtering')
-            bfm = sweep_filters(targets, targets, filters, model=None, device=None)
+            bfm = sweep_filters(inputs, targets, conv_matrices, cutoffs, model=None, device=None)
             baseline_filtered.append(bfm)
             #frequencies, psd = welch(encoded, 50)
             #freqs.append(frequencies)
@@ -93,42 +96,29 @@ def evaluate(test_loader:DataLoader, model:Union[CNNAutoEncoder], save_path:Unio
     # SAVE METRICS
     filtered_mse = np.asarray(filtered_mse)
     baseline_filtered = np.asarray(baseline_filtered)
-    #print(filtered_mse.shape)
     avg_filtered_mse = np.mean(filtered_mse, axis=0)
     avg_baseline_filtered = np.mean(baseline_filtered, axis=0)
-    #print(avg_filtered_mse.shape)
-    metrics = {'mse': float(np.mean(mse)), 'sparsity':float(np.mean(sparsity)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist(), 'avg_baseline_filtered':avg_baseline_filtered.tolist(), 'baseline_filtered':baseline_filtered.tolist()}
+    metrics = {'mse': float(np.mean(mse)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist(), 'avg_baseline_filtered':avg_baseline_filtered.tolist(), 'baseline_filtered':baseline_filtered.tolist()}
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)
 
     return metrics
 
-def sweep_filters(encoded:np.ndarray, targets:np.ndarray,filters:List[np.ndarray], model:CNNAutoEncoder, device) -> List[float]:
+def sweep_filters(encoded:torch.tensor, targets:np.ndarray,conv_matrices:List[np.ndarray], cutoffs:List[float], model:CNNAutoEncoder, device, ntaps:int=51) -> List[float]:
     """"""
-    encoded = np.expand_dims(encoded, axis=0)
+    #encoded = np.expand_dims(encoded, axis=0)
     mse = []
-    for f in filters:
-        new_encoded = filter_encoding(encoded, f=f)
+    for i in range(len(conv_matrices)):
+        new_encoded = filter_encoding(encoded, f_matrix=conv_matrices[i], c=cutoffs[i], ntaps=ntaps)
         if model is not None:
-            new_encoded = torch.from_numpy(new_encoded).to(torch.float).to(device)
+            new_encoded = new_encoded.to(device)
             outputs = model.decode(new_encoded)
             outputs = np.squeeze(outputs.cpu().numpy())
         else: 
-            outputs = np.squeeze(new_encoded)
-        
-        # print(f'filter: {f.shape}')
-        # print(f'encoded: {encoded.shape}')
-        #print(f'new_encoded: {new_encoded.shape}')
-        # print(f'output: {outputs.shape}')
-        # print(f'target: {targets.shape}')
+            outputs = np.squeeze(new_encoded.numpy())
+
         
         mse.append(mean_squared_error(targets, outputs))
 
     return np.asarray(mse)
 
-
-#### scipy.signal.firwin - convole w your signals
-### num taps (how long the filter is), cutoff friequency - in units of nyquist frequency, probably easier to ignore our sampling rate, 20 linearly spaced cutoffs between 0-1, this gives a filter 
-### np.convolve with time series , filter, mode='same'
-### 51 vs. 151, orange one sharper, longer filter starts to get edge artifacts , should be high enough (51)
-### plt psd
