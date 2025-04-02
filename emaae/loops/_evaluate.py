@@ -115,7 +115,7 @@ def sweep_filters(encoded:torch.tensor, targets:np.ndarray,conv_matrices:List[np
             outputs = model.decode(new_encoded)
             outputs = np.squeeze(outputs.cpu().numpy())
         else: 
-            outputs = np.squeeze(new_encoded.numpy())
+            outputs = np.squeeze(new_encoded.cpu().numpy())
 
         
         mse.append(mean_squared_error(targets, outputs))
