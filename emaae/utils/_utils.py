@@ -70,7 +70,7 @@ def filter_encoding(batch_encoded:torch.tensor, device=None, f_matrix:torch.tens
         f_matrix = filter_matrix(int(t), ntaps=ntaps, c=c)
     else:
         f_matrix = f_matrix[:t,:t]
-    
+    #batch_encoded.to(device)
     f_matrix = f_matrix.to(device)
     filtered = torch.matmul(batch_encoded, f_matrix)
     if to_numpy:
