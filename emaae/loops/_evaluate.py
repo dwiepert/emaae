@@ -86,7 +86,7 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             fm = sweep_filters(encoded=encoded, targets=targets, conv_matrices=conv_matrices, cutoffs=cutoffs, model=model, device=device)
             filtered_mse.append(fm)
             
-            print('baseline filtering')
+            #print('baseline filtering')
             bfm = sweep_filters(inputs, targets, conv_matrices, cutoffs, model=None, device=device)
             baseline_filtered.append(bfm)
             #frequencies, psd = welch(encoded, 50)
