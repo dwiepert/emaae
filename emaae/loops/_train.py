@@ -202,7 +202,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             early_stopping(avg_vloss, model, e)
             if early_stopping.early_stop and not alpha_update:
                 print("Early stopping. Switching to alpha update.") 
-                best_model,best_epoch = early_stopping.get_best_model()
+                best_model, best_epoch, best_score = early_stopping.get_best_model()
                 torch.save(best_model.state_dict(), str(mpath / f'{best_model.get_type()}_bestmodel_a{criterion.alpha}e{best_epoch}.pth'))
                 if update:
                     alpha_update=True

@@ -109,6 +109,7 @@ def sweep_filters(encoded:torch.tensor, targets:np.ndarray,conv_matrices:List[np
     #encoded = np.expand_dims(encoded, axis=0)
     mse = []
     for i in range(len(conv_matrices)):
+        encoded = encoded.to(device)
         new_encoded = filter_encoding(encoded, device=device, f_matrix=conv_matrices[i], c=cutoffs[i], ntaps=ntaps)
         if model is not None:
             new_encoded = new_encoded.to(device)
