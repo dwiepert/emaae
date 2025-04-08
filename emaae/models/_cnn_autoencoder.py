@@ -38,7 +38,7 @@ class CNNAutoEncoder(nn.Module):
         if self.n_decoder not in [2,3,4,5]:
             raise NotImplementedError(f'Model not compatible with {self.n_decoder} decoder blocks.')
         self.inner_size = inner_size
-        if self.inner_size not in [768,1024]:
+        if self.inner_size not in [512,768,1024]:
             raise NotImplementedError(f'Model not compatible with an inner dimension of {self.inner_size}.')
 
         self.batchnorm_first = batchnorm_first
