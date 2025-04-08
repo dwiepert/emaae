@@ -166,23 +166,6 @@ def plot_logs(root:Union[str, Path], loss_type='tvl2', loss_label='Total Variati
         plt.savefig(str(save / f'{loss_type}_e1.png'), dpi=300)
         plt.clf()
 
-    ### Plot sparsity
-    sparsity = logs[['epoch', 'sparsity', 'type']]
-    sparsity = sparsity.groupby(['epoch','type']).mean()
-    #loss = loss.sort_values(by='epoch')
-    sparsity = sparsity.reset_index()
-    
-    tl = sparsity[sparsity['type']=='train']
-    vl = sparsity[sparsity['type']=='val']
-    plt.plot(tl['epoch'].tolist(), tl['sparsity'].tolist(),color='black', label='Train')
-    plt.plot(vl['epoch'].tolist(), vl['sparsity'].tolist(), color='crimson', linestyle='--', label='Validation')
-    plt.xlabel('Epoch')
-    plt.ylabel('Sparsity (%)')
-    plt.legend()
-    plt.title(f'Sparsity across epochs', loc='center')
-    plt.savefig(str(save / f'sparsity.png'), dpi=300)
-    plt.clf()
-    plt.close()
     
 
 def read_logs(files):
@@ -248,8 +231,9 @@ def plot_reconstructions(reconstructed_root:Union[str,Path], original:Union[str,
                     plt.plot(norm_j, color='dimgray')
                 
 
-                jcol = pred[:,j]
-                norm_j = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
+                #jcol = pred[:,j]
+                norm_j = pred[:,j]
+                #norm_j = 2 * np.divide((jcol - np.min(jcol)), (np.max(jcol)-np.min(jcol)))
                 norm_j += rlist[j]
                 plt.plot(norm_j, color=colors[j])
 
@@ -282,6 +266,9 @@ def plot_activations(root, original, upper_text=10**8, lower_text=10**7, x_text=
     rfeats = {}
     for r in enc_files:
         name = r.name.replace('.pt','')
+        name = name.split(" ")[0]
+        if ' ' in name:
+            continue
         rfeats[name] = np.transpose(np.squeeze(torch.load(r).numpy()))
 
     if flist == []:
@@ -475,7 +462,7 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e101bs16_adamw_mse_filterc0.2n51_a1_earlystop_bnf'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_filterc0.2n51_a1_earlystop_bnf'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
 plot_logs(root, loss_type=None)

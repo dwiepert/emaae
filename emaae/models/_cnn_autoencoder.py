@@ -79,9 +79,14 @@ class CNNAutoEncoder(nn.Module):
         #               'out_size': [128,512,1024],
         #               'kernel_size':[5,2,2]}
         
-        if self.n_encoder == 2 and self.inner_size==1024 and self.input_dim==13:
+        if self.n_encoder == 2 and self.inner_size==1024 and self.input_dim==13 and self.initial_ekernel==11:
             return {'in_size': [self.input_dim, 512],
                       'out_size': [512,1024],
+                      'kernel_size':[11,3]}
+        
+        if self.n_encoder == 2 and self.inner_size==512 and self.input_dim==13:
+            return {'in_size': [self.input_dim, 512],
+                      'out_size': [256,512],
                       'kernel_size':[11,3]}
         
         # if self.n_encoder == 2 and self.inner_size==1024 and self.input_dim==13:
@@ -128,6 +133,12 @@ class CNNAutoEncoder(nn.Module):
             return {'in_size': [1024, 512],
                       'out_size': [512, self.input_dim],
                       'kernel_size':[5,3]}
+        
+        if self.n_decoder == 2 and self.inner_size==512 and self.input_dim==13 and self.initial_dkernel==5:
+            return {'in_size': [512, 256],
+                      'out_size': [256, self.input_dim],
+                      'kernel_size':[5,3]}
+        
         if self.n_decoder == 2 and self.inner_size==1024 and self.input_dim==13:
             return {'in_size': [1024, 512],
                       'out_size': [512, self.input_dim],
