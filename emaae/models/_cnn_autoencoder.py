@@ -94,21 +94,7 @@ class CNNAutoEncoder(nn.Module):
         #               'out_size': [512,1024],
         #               'kernel_size':[10,2]}
         
-        ###768 dim encoders
-        if self.n_encoder == 5 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [self.input_dim, self.input_dim,128, 256, 256],
-                      'out_size': [self.input_dim, 128, 256, 256, 768],
-                      'kernel_size':[5,3,3,3,3]}
-        
-        if self.n_encoder == 4 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [self.input_dim,128, 256, 256],
-                      'out_size': [128, 256, 256,768],
-                      'stride': [5,3,3,3]}
-        
-        if self.n_encoder == 3 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [self.input_dim, 128, 256],
-                      'out_size': [128,256,768],
-                      'stride': [5,3,3]}
+
     
     def _decoder_block_options(self):
         """
@@ -116,19 +102,12 @@ class CNNAutoEncoder(nn.Module):
         https://asiltureli.github.io/Convolution-Layer-Calculator/
         """
         ###1024 dim decoders
-        if self.n_decoder == 5 and self.inner_size==1024 and self.input_dim==13:
-            return {'in_size': [1024, 1024, 512, 256, 128],
-                      'out_size': [1024,512,256,128,self.input_dim], 
-                      'kernel_size':[5,3,3,3,3]}
-        if self.n_decoder == 4 and self.inner_size==1024 and self.input_dim==13:
-            return {'in_size': [1024, 512, 256, 128],
-                      'out_size': [512, 256, 128, self.input_dim],
-                      'kernel_size':[5,3,3,3]}
         
         if self.n_decoder == 3 and self.inner_size==1024 and self.input_dim==13 and self.initial_dkernel==5:
             return {'in_size': [1024, 512, 128],
                       'out_size': [512, 128, self.input_dim],
                       'kernel_size':[5,3,3]}
+        
         if self.n_decoder == 2 and self.inner_size==1024 and self.input_dim==13 and self.initial_dkernel==5:
             return {'in_size': [1024, 512],
                       'out_size': [512, self.input_dim],
@@ -144,19 +123,6 @@ class CNNAutoEncoder(nn.Module):
                       'out_size': [512, self.input_dim],
                       'kernel_size':[3,3]}
         
-        ###768 dim decoders
-        if self.n_decoder == 5 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [768, 768, 256, 256, 128],
-                      'out_size': [768,256,256,128,self.input_dim],
-                      'kernel_size':[5,3,3,3,3]}
-        if self.n_decoder == 4 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [768, 256, 256, 128],
-                      'out_size': [256,256,128,self.input_dim],
-                      'kernel_size':[5,3,3,3]}
-        if self.n_decoder == 3 and self.inner_size==768 and self.input_dim==13:
-            return {'in_size': [768, 256, 128],
-                      'out_size': [256,128,self.input_dim],
-                      'kernel_size':[5,3,3]}
 
 
     def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_relu:bool=False, exclude_final_norm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False) -> nn.Sequential:
