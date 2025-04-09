@@ -462,7 +462,7 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_filterc0.2n51_a1_earlystop_bnf'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e2_iek11_d2_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
 test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
 plot_logs(root, loss_type=None)

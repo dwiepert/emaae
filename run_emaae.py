@@ -108,6 +108,8 @@ if __name__ == "__main__":
                                 help='Specify whether to add an lr scheduler')
     train_args.add_argument('--end_lr', type=float, default=0.0001,
                                 help='Specify goal end learning rate.')
+    train_args.add_argument('--residual', action='store_true',
+                                help='')
     args = parser.parse_args()
 
     # CONNECT TO CUDA
@@ -182,7 +184,8 @@ if __name__ == "__main__":
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'initial_ekernel':args.initial_ekernel, 'n_decoder':args.n_decoder, 'initial_dkernel':args.initial_dkernel, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
-                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'n_taps':args.n_taps}
+                        'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'n_taps':args.n_taps,
+                        'residual':args.residual}
 
     if args.eval_only:
         args.lr = model_config['learning_rate']
@@ -206,12 +209,15 @@ if __name__ == "__main__":
         args.initial_dkernel = model_config['initial_dkernel']
         args.cutoff_freq = model_config['cutoff_freq']
         args.n_taps = model_config['n_taps']
+        args.residual = model_config['residual']
         ##NTAPS CUTOFF FREQ
 
 
     name_str =  f'model_e{args.n_encoder}_iek{args.initial_ekernel}_d{args.n_decoder}_idk{args.initial_dkernel}_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
     if args.sparse_loss == 'filter':
         name_str += f'c{args.cutoff_freq}n{args.n_taps}'
+        if args.residual:
+            name_str += '_res'
     ### LOSS - CUTOFF FREQ
     if args.alpha is not None:
         name_str += f'_a{args.alpha}'
@@ -257,7 +263,7 @@ if __name__ == "__main__":
                       device=device, optim=optim, criterion=criterion, lr_scheduler=scheduler, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
                       early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty,
-                      filter_loss=filter_loss, maxt=max(train_dataset.maxt, val_dataset.maxt),filter_cutoff=args.cutoff_freq, ntaps=args.n_taps)
+                      filter_loss=filter_loss, maxt=max(train_dataset.maxt, val_dataset.maxt),filter_cutoff=args.cutoff_freq, ntaps=args.n_taps, residual=args.residual)
         
         #SAVE FINAL TRAINED MODEL
         mpath = save_path / 'models'

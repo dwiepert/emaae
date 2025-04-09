@@ -69,7 +69,7 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
           optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
           epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False, 
-          filter_loss:bool=False, maxt:int=None, filter_cutoff:float=0.2, ntaps:int=51) -> Union[CNNAutoEncoder]:
+          filter_loss:bool=False, maxt:int=None, filter_cutoff:float=0.2, ntaps:int=51, residual:bool=False) -> Union[CNNAutoEncoder]:
     """
     Train a model
 
@@ -117,6 +117,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         
         # TRAINING LOOP
         for data in tqdm(train_loader):
+
             inputs = data['features'].to(device)
             optim.zero_grad()
 
@@ -125,10 +126,15 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
             if filter_loss:
                 encoding = filter_encoding(encoding, device=device, f_matrix=conv_matrix, ntaps=ntaps, c=filter_cutoff).to(device)
+                if residual:
+                    low_inputs = filter_encoding(inputs, device=device, f_matrix=conv_matrix, ntaps=ntaps, c=filter_cutoff).to(device)
                 #encoding = encoding.to(device)
             # DECODE
             outputs = model.decode(encoding)
-            
+
+            if filter_loss and residual:
+                outputs = torch.add(outputs, low_inputs)
+
             # LOSS
             if weight_penalty:
                 weights = model.get_weights()
@@ -177,9 +183,14 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
                 if filter_loss:
                     vencoding = filter_encoding(vencoding, device=device, f_matrix=conv_matrix, c=filter_cutoff, ntaps=ntaps).to(device)
+                    if residual:
+                        low_vinputs = filter_encoding(vinputs, device=device, f_matrix=conv_matrix, c=filter_cutoff, ntaps=ntaps).to(device)
                     #vencoding = vencoding.to(device)
                 # DECODE 
                 voutputs = model.decode(vencoding)
+
+                if filter_loss and residual:
+                    voutputs = torch.add(voutputs, low_vinputs)
 
                 # LOSS
                 vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding, weights=vweights)
