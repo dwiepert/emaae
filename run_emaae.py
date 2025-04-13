@@ -173,7 +173,7 @@ if __name__ == "__main__":
                         'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'reconstruction_loss':args.reconstruction_loss, 'encoding_loss':args.encoding_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
                         'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'n_taps':args.n_taps,
-                        'residual':args.residual, 'exclude_all_norm':args.exclude_all_norm, 'n_filters':args.n_filters}
+                        'residual':args.residual, 'exclude_final_norm':args.exclude_final_norm, 'exclude_all_norm':args.exclude_all_norm, 'n_filters':args.n_filters}
 
     if args.eval_only:
         args.lr = model_config['learning_rate']
@@ -225,6 +225,8 @@ if __name__ == "__main__":
         name_str += f'_explr{args.end_lr}'
     if args.exclude_all_norm:
         name_str += f'_nonorm'
+    if args.exclude_final_norm and not args.exclude_all_norm:
+        name_str += f'_nofinalnorm'
     save_path = args.out_dir / name_str
     save_path.mkdir(exist_ok=True)
 
