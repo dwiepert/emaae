@@ -14,8 +14,8 @@ class EarlyStopping:
     """
     Early stopping class
 
-    :param patience: Number of epochs to wait before stopping if no improvement.
-    :param delta: Minimum change in the monitored quantity to qualify as an improvement.
+    :param patience: Number of epochs to wait before stopping if no improvement. (default = 5)
+    :param delta: Minimum change in the monitored quantity to qualify as an improvement. (default = 0)
     """
     def __init__(self, patience:int=5, delta:int=0):
         self.patience = patience
@@ -33,6 +33,7 @@ class EarlyStopping:
 
         :param val_loss: float, validation loss
         :param model: current model
+        :param epoch: int, current epoch
         """
         score = val_loss
         if self.best_score is None:

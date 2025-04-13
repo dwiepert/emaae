@@ -1,4 +1,4 @@
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 
 #change log:
 # 0.0.0: initialized repo
@@ -18,4 +18,5 @@ __version__ = '0.4.2'
 # 0.3.8: filter instead of loss added
 # 0.4.0: normalization of EMA added + new filtering process
 # 0.4.1: device fix
-# 0.4.2: 
+# 0.4.2: debugging
+# 0.4.3: documentation

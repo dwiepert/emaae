@@ -2,7 +2,7 @@
 Custom loss function
 
 Author(s): Daniela Wiepert
-Last modified: 02/10/2025
+Last modified: 04/13/2025
 """
 #IMPORTS
 #built-in
@@ -15,12 +15,12 @@ import torch.nn as nn
 from ._scheduler import StepAlpha
 from emaae.utils import fro_norm3d_list, calc_sparsity
 
-class SparseLoss(nn.Module):
+class CustomLoss(nn.Module):
     """
-    Custom loss for training autoencoder - adds a sparsity loss and weights each loss
+    Custom loss for training autoencoder
 
     :param loss1_type: str, base autoencoder loss (default='mse')
-    :param loss2_type: str, sparsity loss (default=L1 Norm)
+    :param loss2_type: str, encoding loss (default=L1 Norm)
     :param alpha: float, loss weight (0-1, default = 0.25)
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
     :param penalty_scheduler: str, scheduler type for updating alpha (default='step')
@@ -28,7 +28,7 @@ class SparseLoss(nn.Module):
     """
     def __init__(self, device, loss1_type:str='mse',loss2_type:str='l1',alpha:float=0.25,
                  weight_penalty:bool=False, penalty_scheduler:str='step', **kwargs):
-        super(SparseLoss, self).__init__()
+        super(CustomLoss, self).__init__()
         self.device = device
         self.alpha = alpha
         self.loss1_type = loss1_type.lower()
@@ -65,6 +65,9 @@ class SparseLoss(nn.Module):
     def _tvl2(self, encoded:torch.Tensor, enc_target:torch.Tensor) -> float:
         """
         Total variation loss L2 (sum of squares of the gradient)
+        :param encoded: tensor of the model encoding
+        :param enc_target: tensor the model encoding shifted by 1 (encoded[:,:,:,1:]) (given to ensure same arguments for all loss functions)
+        :return loss: float, calculated tvl2 loss
         """
         cut_encoded = encoded[:,:,:-1]
         #print(cut_encoded.shape)
@@ -97,8 +100,7 @@ class SparseLoss(nn.Module):
         :param decoding: torch.Tensor, model output after decoding (batch_size, feature_dim, time)
         :param dec_target: torch.Tensor, target decoding
         :param encoded: torch.Tensor, model output after encoding (batch_size, encoding_dim, time)
-        :param weights: optionally give list of torch.Tensors of all convolutional layer weights
-        :param device: to send
+        :param weights: optionally give list of torch.Tensors of all convolutional layer weights (default = None)
         :return total_loss: calculated loss
         """
         loss1 = self.loss1(decoded, dec_target)

@@ -21,9 +21,15 @@ class CNNAutoEncoder(nn.Module):
     :param n_encoder: int, number of encoder blocks (default = 5)
     :param n_decoder: int, number of decoder blocks (default = 5)
     :param inner_size: int, size of encoded representations (default = 1024)
+    :param batchnorm_first: bool, True if batchnorm should come before CNN layer (default=True)
+    :param final_tanh: bool, True if using tanh activation instead of no activation in the final layer of encoder/decoder (default=False)
+    :param initial_ekernel: int, specify size of the first kernel in encoder (default = 5)
+    :param initial_dkernel: int, specify size of the first kernel in decoder (default = 5)
+    :param exclude_final_norm: bool, True if excluding normalization from final CNN block in encoder and decoder (default=False)
+    :param exclude_all_norm: bool, True if excluding all normalization from the model (default=True)
     """
-    def __init__(self, input_dim:int=13, n_encoder:int=5, n_decoder:int=5, inner_size:int=1024, batchnorm_first:bool=True, 
-                 final_tanh:bool=False, initial_ekernel:int=5, initial_dkernel:int=5, exclude_final_norm:bool=False):
+    def __init__(self, input_dim:int=13, n_encoder:int=2, n_decoder:int=2, inner_size:int=1024, batchnorm_first:bool=True, 
+                 final_tanh:bool=False, initial_ekernel:int=5, initial_dkernel:int=5, exclude_final_norm:bool=False, exclude_all_norm:bool=False):
         super(CNNAutoEncoder, self).__init__()
         print(f'{n_encoder} encoder layers, {n_decoder} decoder layers, {inner_size} inner dims.')
         self.initial_ekernel=initial_ekernel
@@ -44,9 +50,11 @@ class CNNAutoEncoder(nn.Module):
         self.batchnorm_first = batchnorm_first
         self.final_tanh = final_tanh
         self.exclude_final_norm = exclude_final_norm
+        self.exclude_all_norm = exclude_all_norm
         self.encoder_params = self._encoder_block_options()
         self.decoder_params = self._decoder_block_options()
-        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_relu=True, exclude_final_norm=self.exclude_final_norm, batchnorm_first=self.batchnorm_first, final_tanh=False)), ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_relu=True, exclude_final_norm=True, batchnorm_first=self.batchnorm_first, final_tanh=self.final_tanh)) ]))
+        self.model = nn.Sequential(OrderedDict([('encoder',self._generate_sequence(params=self.encoder_params, exclude_final_norm=self.exclude_final_norm, batchnorm_first=self.batchnorm_first, final_tanh=False, exclude_all_norm=self.exclude_all_norm)), 
+                                                ('decoder',self._generate_sequence(params=self.decoder_params, exclude_final_norm=True, batchnorm_first=self.batchnorm_first, final_tanh=self.final_tanh, exclude_all_norm=self.exclude_all_norm)) ]))
 
     def _encoder_block_options(self):
         """
@@ -54,46 +62,18 @@ class CNNAutoEncoder(nn.Module):
         https://asiltureli.github.io/Convolution-Layer-Calculator/
         """
         ###1024 dim encoders
-        if self.n_encoder == 5 and self.inner_size==1024 and self.input_dim==13:
-            return {'in_size': [self.input_dim, self.input_dim,128, 256, 512],
-                      'out_size': [self.input_dim, 128, 256, 512,1024],
-                      'kernel_size':[5,3,3,3,3]}
-        
-        if self.n_encoder == 4 and self.inner_size==1024 and self.input_dim==13:
-           return {'in_size': [self.input_dim,128, 256, 512],
-                     'out_size': [128, 256, 512,1024],
-                     'kernel_size':[5,3,3,3]}
-        
-        if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13 and self.initial_ekernel==11:
+        if self.n_encoder == 3 and self.input_dim < 128 and self.inner_size > 512:
             return {'in_size': [self.input_dim, 128, 512],
-                      'out_size': [128,512,1024],
-                      'kernel_size':[11,3,3]} 
-        
-        if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13:
-            return {'in_size': [self.input_dim, 128, 512],
-                      'out_size': [128,512,1024],
-                      'kernel_size':[5,3,3]} 
-        
-        # if self.n_encoder == 3 and self.inner_size==1024 and self.input_dim==13:
-        #     return {'in_size': [self.input_dim, 128, 512],
-        #               'out_size': [128,512,1024],
-        #               'kernel_size':[5,2,2]}
-        
-        if self.n_encoder == 2 and self.inner_size==1024 and self.input_dim==13 and self.initial_ekernel==11:
+                      'out_size': [128,512,self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3,3]} 
+        elif self.n_encoder == 2 and self.input_dim <= 512 and self.inner_size > 512:
             return {'in_size': [self.input_dim, 512],
-                      'out_size': [512,1024],
-                      'kernel_size':[11,3]}
-        
-        if self.n_encoder == 2 and self.inner_size==512 and self.input_dim==13 and self.initial_ekernel==11:
+                      'out_size': [512,self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
+        elif self.n_encoder == 2 and self.input_dim <= 256 and self.inner_size <= 512 and self.inner_size >= 256:
             return {'in_size': [self.input_dim, 256],
-                      'out_size': [256,512],
-                      'kernel_size':[11,3]}
-        
-        # if self.n_encoder == 2 and self.inner_size==1024 and self.input_dim==13:
-        #     return {'in_size': [self.input_dim, 512],
-        #               'out_size': [512,1024],
-        #               'kernel_size':[10,2]}
-        
+                      'out_size': [256,self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
 
     
     def _decoder_block_options(self):
@@ -103,58 +83,58 @@ class CNNAutoEncoder(nn.Module):
         """
         ###1024 dim decoders
         
-        if self.n_decoder == 3 and self.inner_size==1024 and self.input_dim==13 and self.initial_dkernel==5:
-            return {'in_size': [1024, 512, 128],
+        if self.n_decoder == 3 and self.inner_size>=512 and self.input_dim<=128:
+            return {'in_size': [self.inner_size, 512, 128],
                       'out_size': [512, 128, self.input_dim],
-                      'kernel_size':[5,3,3]}
-        
-        if self.n_decoder == 2 and self.inner_size==1024 and self.input_dim==13 and self.initial_dkernel==5:
-            return {'in_size': [1024, 512],
+                      'kernel_size':[self.initial_dkernel,3,3]}
+        elif self.n_decoder == 2 and self.inner_size>512 and self.input_dim<=512:
+            return {'in_size': [self.inner_size, 512],
                       'out_size': [512, self.input_dim],
-                      'kernel_size':[5,3]}
-        
-        if self.n_decoder == 2 and self.inner_size==512 and self.input_dim==13 and self.initial_dkernel==5:
-            return {'in_size': [512, 256],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 2 and self.inner_size<=512 and self.inner_size >= 256 and self.input_dim<=256:
+            return {'in_size': [self.inner_size, 256],
                       'out_size': [256, self.input_dim],
-                      'kernel_size':[5,3]}
+                      'kernel_size':[self.initial_dkernel,3]}
         
-        if self.n_decoder == 2 and self.inner_size==1024 and self.input_dim==13:
-            return {'in_size': [1024, 512],
-                      'out_size': [512, self.input_dim],
-                      'kernel_size':[3,3]}
-        
-
-
-    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_relu:bool=False, exclude_final_norm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False) -> nn.Sequential:
+    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_norm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False, exclude_all_norm:bool=False) -> nn.Sequential:
         """
         Generate a sequence of layers
 
         :param params: dictionary of model parameters
-        :param exclude_final_relu: boolean, indicate whether to exclude the final relu layer
-        :return: nn.Sequential layers
+        :param batchnorm_first: bool, True if batchnorm should come before CNN layer (default=True)
+        :param final_tanh: bool, True if using tanh activation instead of no activation in the final layer of encoder/decoder (default=False)
+        :param exclude_final_norm: bool, True if excluding normalization from final CNN block in encoder and decoder (default=False)
+        :param exclude_all_norm: bool, True if excluding all normalization from the model (default=True)
+        :return: nn.Sequential of layers
         """
         sequence = OrderedDict()
     
         for n in range(len(params['in_size'])):
             block = OrderedDict()
-            block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
 
-            if (n == (len((params['in_size'])) - 1)) and exclude_final_relu and (not exclude_final_norm):
-                block['instancenorm'] = nn.InstanceNorm1d(num_features=params['out_size'][n])
-                #block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
-            
-            if (n == (len((params['in_size'])) - 1)) and final_tanh:
-                #case 1 - we are at the final layer and we want to have tanh - don't include batchnorm, just have tanh (ONLY FOR DECODER SO THAT'S WHY NO BATCHNORM)
-                block['tanh'] = nn.Tanh()
-            elif (n < len(params['in_size']) - 1) or not exclude_final_relu:
-                #case 2 - we are either not at the final layer OR we aren't excluding final relu (that is, we're building the encoder)
-                if batchnorm_first:
+            if (n < len(params['in_size']) - 1):
+                if batchnorm_first and (not exclude_all_norm):
                     block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
+                
+                block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
 
                 block['relu'] = nn.ReLU()
-                if not batchnorm_first:
+                if not batchnorm_first and (not exclude_all_norm):
                     block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
             
+            else:
+                if batchnorm_first and (not exclude_final_norm) and (not exclude_all_norm):
+                    block['instancenorm'] = nn.InstanceNorm1d(num_features=params['out_size'][n])
+                
+                block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
+                
+                if final_tanh:
+                    block['tanh'] = nn.Tanh()
+
+                if not batchnorm_first and (not exclude_final_norm) and (not exclude_all_norm):
+                    block['instancenorm'] = nn.InstanceNorm1d(num_features=params['out_size'][n])
+                #block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
+              
             sequence[f'block{n}'] = nn.Sequential(block)
         print(sequence)
         return nn.Sequential(sequence)
@@ -177,23 +157,6 @@ class CNNAutoEncoder(nn.Module):
         """
         return self.model.decoder(x)
     
-    # def forward(self, x:torch.Tensor, debug:bool=False) -> torch.Tensor:
-    #     """
-    #     Forward function of model
-
-    #     :param x: tensor, input
-    #     :return decoded: tensor, output
-    #     """
-    #     if debug:
-    #         print(f'Initial size: {x.shape}')
-    #         encoded = self.model.encoder(x)
-    #         print(f'Size after encoding: {encoded.shape}')
-    #         decoded = self.model.decoder(encoded)
-    #         print(f'Size after decoding: {decoded.shape}')
-    #         return decoded
-    #     else:
-    #         return self.model(x)
-        
     def get_type(self) -> str:
         """
         Return the model type

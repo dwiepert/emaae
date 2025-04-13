@@ -2,12 +2,11 @@
 Training loop
 
 Author(s): Daniela Wiepert
-Last modified: 02/10/2025
+Last modified: 04/13/2025
 """
 #IMPORTS
 ##built-in
 import json
-import os
 from pathlib import Path
 from typing import Union
 import time
@@ -18,12 +17,12 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
 ##local
-from emaae.models import SparseLoss, CNNAutoEncoder, EarlyStopping
-from emaae.utils import calc_sparsity, filter_encoding, filter_matrix
+from emaae.models import CustomLoss, CNNAutoEncoder, EarlyStopping
+from emaae.utils import filter_encoding, filter_matrix
 
 def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr:float=0.0001, 
                  loss1_type:str='mse', loss2_type:str='l1', alpha:float=0.1, weight_penalty:bool=False,
-                 penalty_scheduler:str='step', lr_scheduler:bool=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], SparseLoss, Union[ExponentialLR, None]] :
+                 penalty_scheduler:str='step', lr_scheduler:bool=False, **kwargs) -> tuple[Union[torch.optim.AdamW, torch.optim.Adam], CustomLoss, Union[ExponentialLR, None]] :
     """
     Set up optimizer and and loss functions
 
@@ -32,14 +31,14 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
     :param optim_type: str, type of optimizer to initialize (default = adamw)
     :param lr: float, learning rate (default = 0.0001)
     :param loss1_type: str, basic autoencoder loss type (default = mse)
-    :param loss2_type: str, sparsity loss type (default = l1)
+    :param loss2_type: str, encoding loss type (default = l1)
     :param alpha: float, alpha for loss function (default=0.1)
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default = False)
     :param penalty_scheduler: str, type of penalty scheduler (default = step)
     :param lr_scheduler: boolean, indicate whether to create a lr scheduler
     :param **kwargs: any additional penalty scheduler parameters
     :return optim: torch.optim, initialized optimizer
-    :return loss_fn: initialized SparseLoss 
+    :return loss_fn: initialized CustomLoss 
     :return scheduler: lr scheduler
     """
 
@@ -52,7 +51,7 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
         return NotImplementedError(f'{optim_type} not implemented.')
 
     # SET UP LOSS
-    loss_fn = SparseLoss(device=device, loss1_type=loss1_type, loss2_type=loss2_type, alpha=alpha,
+    loss_fn = CustomLoss(device=device, loss1_type=loss1_type, loss2_type=loss2_type, alpha=alpha,
                           weight_penalty=weight_penalty, penalty_scheduler=penalty_scheduler, **kwargs)
 
     # set up lr scheduler
@@ -67,9 +66,9 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
     return optim, loss_fn, scheduler
 
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
-          optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:SparseLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
-          epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=5, weight_penalty:bool=False, 
-          filter_loss:bool=False, maxt:int=None, filter_cutoff:float=0.2, ntaps:int=51, residual:bool=False) -> Union[CNNAutoEncoder]:
+          optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:CustomLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
+          epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=500, weight_penalty:bool=False, residual:bool=False,
+          filter_loss:bool=False, **kwargs) -> Union[CNNAutoEncoder]:
     """
     Train a model
 
@@ -78,15 +77,17 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param model: initialized autoencoder model
     :param device: torch device
     :param optim: torch.optim, initialized optimizer
-    :param criterion: initialized SparseLoss 
+    :param criterion: initialized CustomLoss 
     :param lr_scheduler: lr scheduler
     :param save_path: str/Path, path to save logs and best model to
-    :param epochs: int, number of epochs to train for
-    :param alpha_epochs: int, number of epochs to run alpha update for
-    :param update: boolean, indicate whether to allow alpha update
-    :param early_stop: boolean, indicate whether to use early stopping
-    :param patience: int, early stop patience
+    :param epochs: int, number of epochs to train for (default=500)
+    :param alpha_epochs: int, number of epochs to run alpha update for (default=15)
+    :param update: boolean, indicate whether to allow alpha update (default=False)
+    :param early_stop: boolean, indicate whether to use early stopping (default=True)
+    :param patience: int, early stop patience (default = 500)
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default=False)
+    :param filter_loss: bool, True if running low pass filter over encoding during training (default=False)
+    :param kwargs: args dictionary with additional arguments for using filter_loss
     :return model: trained autoencoder model
     
     """
@@ -104,6 +105,9 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         new_epoch_counter = 0
 
     if filter_loss:
+        maxt = kwargs['maxt']
+        ntaps = kwargs['ntaps']
+        filter_cutoff=kwargs['filter_cutoff']
         assert (maxt is not None)
         conv_matrix = filter_matrix(t=maxt, ntaps=ntaps, c=filter_cutoff)
 

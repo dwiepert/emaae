@@ -2,7 +2,7 @@
 Custom EMA dataset
 
 Author(s): Daniela Wiepert
-Last modified: 01/10/2025
+Last modified: 04/12/2025
 """
 #IMPORTS
 ##built-in
@@ -45,25 +45,33 @@ class ToTensor():
     Convert sample features/times from numpy to tensors
     """
     def __call__(self, sample:Dict[str,np.ndarray]) -> Dict[str,torch.Tensor]:
+        """
+        Transform sample
+        :param sample: dict, sample
+        :return sample: dict, transformed sample
+        """
         sample['features'] = torch.from_numpy(sample['features'])
         sample['times'] = torch.from_numpy(sample['times'])
         return sample
 
-class EMADataset(Dataset):
+class FeatureDataset(Dataset):
     """
-    Custom EMA Dataset
+    Custom Feature Dataset
     :param root_dir: str/Path, root directory with feature files
+    :param feature_type: str, indicate feature type
     :param recursive: bool, boolean for whether to load features recursively (default = False)
     :param cci_features: cc interface (default = None)
     """
-    def __init__(self, root_dir:Union[str,Path], recursive:bool=False, cci_features=None):
+    def __init__(self, root_dir:Union[str,Path], feature_type:str='ema',recursive:bool=False, cci_features=None):
         super().__init__()
         self.root_dir = root_dir
+        self.feature_type = feature_type
         self.cci_features = cci_features
         self.recursive=recursive
         self._load_data()
         self.files = list(self.features.keys())
-        self.transform = torchvision.transforms.Compose([ProcessEMA(), ToTensor()])
+        if self.feature_type == 'ema':
+            self.transform = torchvision.transforms.Compose([ProcessEMA(), ToTensor()])
 
     def _load_data(self):
         """

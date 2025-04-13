@@ -12,8 +12,9 @@ class StepAlpha():
     """
     Scheduler that updates an alpha value (0-1) by gamma each call
     
-    :param alpha: float, alpha value
-    :param gamma: float, value to update alpha by each step
+    :param alpha: float, alpha value (default = 0.25)
+    :param gamma: float, value to update alpha by each step (default = 0.1)
+    :param epochs: int, number of epochs (optional, used for calculating gamma based on epochs) (default = None)
     """
     def __init__(self, alpha:float=0.25, gamma:float=0.1, epochs:Optional[int]=None):
         self.alpha = alpha
@@ -25,9 +26,7 @@ class StepAlpha():
     
     def step(self) -> float:
         """
-        Update
-        :param alpha: float, alpha value (0-1)
-        :return new_alpha: float, updated alpha value(0-1)
+        Update alpha
         """
         new_alpha = self.alpha + self.gamma
         self.step_counter += 1

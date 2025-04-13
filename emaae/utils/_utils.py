@@ -2,11 +2,11 @@
 Some util functions for this package
 
 Author(s): Daniela Wiepert
-Last modified: 02/13/2025
+Last modified: 04/13/2025
 """
 # IMPORTS
 ##built-in
-from typing import List, Union
+from typing import List, Union, Tuple
 ##third-party
 import numpy as np
 import torch
@@ -62,8 +62,17 @@ def calc_sparsity(encoding:Union[np.ndarray, torch.tensor]):
         sparsity = sparsity.item()
     return sparsity
 
-def filter_encoding(batch_encoded:torch.tensor, device=None, f_matrix:torch.tensor=None, c:float=0.2, ntaps:int=51, to_numpy:bool=False) -> torch.tensor:
+def filter_encoding(batch_encoded:torch.tensor, device=None, f_matrix:torch.tensor=None, c:float=0.2, ntaps:int=51, to_numpy:bool=False) -> Union[torch.tensor, np.ndarray]:
     """
+    Filter an encoding
+
+    :param batch_encoded: tensor, batch of encodings (B, E, T)
+    :param device: torch device (default = None)
+    :param f_matrix: matrix for convolution (default = None)
+    :param c: float, filter cutoff for convolution (default = 0.2)
+    :param ntaps: int, size of filter (default = 51)
+    :param to_numpy: bool, True if returning a numpy array of the filtered encoding (default = False)
+    :return filtered: torch tensor or numpy array of the filtered encoding (B, E, T)
     """
     t = batch_encoded.shape[-1]
     if f_matrix is None:
@@ -79,46 +88,17 @@ def filter_encoding(batch_encoded:torch.tensor, device=None, f_matrix:torch.tens
         return filtered
 
 
-# def filter_encoding(batch_encoded:Union[np.ndarray, torch.tensor], f:Union[np.ndarray]=None, c:float=0.2, ntaps:int=51) -> List[float]:
-#     """
-#     for torch tensors, expects that f and e are the same type (e.g. torch.float) and both on the device 
-#     """
-#     convolved_batch = []
-#     if f is None:
-#         f = firwin(numtaps=ntaps,cutoff=c)
-#     if not isinstance(batch_encoded, np.ndarray):
-#         batch_encoded = batch_encoded.detach().cpu().numpy()
-#         # if not isinstance(f, torch.Tensor):
-#         #     f = torch.from_numpy()
-#         # f1 = torch.flip(f, (0,)).view(1, 1, -1)
-#         # for b in range(batch_encoded.shape[0]):
-#         #     encoded = torch.squeeze(batch_encoded[b,:,:])
-#         #     convolved_signal = torch.empty(encoded.shape)
-#         #     for i in range(encoded.shape[0]):
-#         #         e = torch.squeeze(encoded[i,:])
-#         #         e1 = e.view(1, 1, -1)
-#         #         out = torch.nn.functional.conv1d(e1, f1, padding='same').view(-1)
-#         #         convolved_signal[i,:] = out
-#         #     convolved_batch.append(convolved_signal)
+def filter_matrix(t:int, f:np.ndarray=None, ntaps:int=51, c:float=0.2, to_torch:bool=True) -> Union[torch.tensor, np.ndarray]:
+    """
+    Create a filter matrix to do convolution quickly with matrix multiplications 
+    :param t: int, number of time points
+    :param f: numpy array, existing filter
+    :param c: float, filter cutoff for convolution (default = 0.2)
+    :param ntaps: int, size of filter (default = 51)
+    :param to_torch: bool, True if returning filter matrix as a torch matrix (default = True)
+    :return m: torch tensor/numpy array, filter matrix
+    """
 
-#         # convolved_batch = torch.stack(convolved_batch)
-#         # print(convolved_batch.shape)
-#     #else:
-#     for b in range(batch_encoded.shape[0]):
-#         encoded = np.squeeze(batch_encoded[b,:,:])
-#         #convolved_signal = np.apply_along_axis(np.convolve,axis=0,arr=encoded,v=f,mode='same')
-#         convolved_signal = np.empty(encoded.shape)
-#         for i in range(encoded.shape[0]):
-#            e = np.squeeze(encoded[i,:])
-#            convolved_signal[i,:] = np.convolve(e, f, mode='same')
-        
-#         convolved_batch.append(convolved_signal)
-
-#     convolved_batch = np.stack(convolved_batch)
-    
-#     return convolved_batch
-
-def filter_matrix(t:int, f:np.ndarray=None, ntaps:int=51, c:float=0.2, to_torch:bool=True):
     if f is None:
         f = firwin(numtaps=ntaps,cutoff=c)
     center = int(ntaps/2)
@@ -132,11 +112,14 @@ def filter_matrix(t:int, f:np.ndarray=None, ntaps:int=51, c:float=0.2, to_torch:
         return torch.from_numpy(m)
     else:
         return m
-        
-
-
-def get_filters(n_filters:int=20, ntaps:int=51):
+    
+def get_filters(n_filters:int=20, ntaps:int=51) -> Tuple[List[np.ndarray], List[np.ndarray]]:
     """
+    Get filters for an array of evenly spaced filters between 0-1
+    :param n_filters: int, number of filters to make
+    :param ntaps: int, size of filter (default = 51)
+    :return filters: list of filters
+    :param cutoffs: list of cutoff frequencies 
     """
     filters = []
     cutoffs = np.linspace((1/n_filters),1,n_filters, endpoint=False)

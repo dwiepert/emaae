@@ -2,7 +2,7 @@
 Train and evaluate an autoencoder
 
 Author(s): Daniela Wiepert
-Last modified: 02/10/2025
+Last modified: 04/13/2025
 """
 #IMPORTS
 ##built-in
@@ -18,7 +18,7 @@ with warnings.catch_warnings():
 import torch
 from torch.utils.data import DataLoader
 ##local
-from emaae.io import EMADataset, custom_collatefn
+from emaae.io import FeatureDataset, custom_collatefn
 from emaae.models import CNNAutoEncoder
 from emaae.loops import train, set_up_train, evaluate
 
@@ -66,17 +66,21 @@ if __name__ == "__main__":
                                 help='Indicate whether to use batchnorm before or after nonlinearity.')
     model_args.add_argument('--exclude_final_norm', action='store_true',
                                 help='Indicate whether to exclude final normalization layer before encoding.')
+    model_args.add_argument('--exclude_all_norm', action='store_true',
+                                help='Indicate whether to exclude all normalization layers before encoding.')
     model_args.add_argument('--final_tanh', action='store_true',
                                 help='Indicate whether to use tanh activation as final part of decoder.')
     model_args.add_argument('--checkpoint', type=str, default=None, 
                                 help='Checkpoint name of full path to model checkpoint.')
+    model_args.add_argument('--residual', action='store_true',
+                                help='add residual connection in training')
     ##train args
     train_args = parser.add_argument_group('train', 'training arguments')
     train_args.add_argument('--eval_only', action='store_true',
                                 help='Specify whether to run only evaluation.')
     train_args.add_argument('--early_stop', action='store_true',
                                 help='Specify whether to use early stopping.')
-    train_args.add_argument('--patience', type=int, default=15,
+    train_args.add_argument('--patience', type=int, default=500,
                                 help='Patience for early stopping.')
     train_args.add_argument('--batch_sz', type=int, default=32,
                                 help='Batch size for training.')
@@ -86,14 +90,16 @@ if __name__ == "__main__":
                                 help='Learning rate.')
     train_args.add_argument('--optimizer', type=str, default='adamw',
                                 help='Type of optimizer to use for training.')
-    train_args.add_argument('--autoencoder_loss', type=str, default='mse',
-                                help='Specify base autoencoder loss type.')
-    train_args.add_argument('--sparse_loss', type=str, default='tvl2',
-                                help='Specify sparsity loss type [l1, tvl2, filter].')
+    train_args.add_argument('--reconstruction_loss', type=str, default='mse',
+                                help='Specify base reconstruction loss type.')
+    train_args.add_argument('--encoding_loss', type=str, default='tvl2',
+                                help='Specify encoding loss type [l1, tvl2, filter].')
     train_args.add_argument('--cutoff_freq', type=float, default=0.2,
                             help='Cutoff frequency for low pass filter training')
     train_args.add_argument('--n_taps', type=int, default=51,
                             help='n_taps for firwin filter')
+    train_args.add_argument('--n_filters', type=int, default=20,
+                            help='number of filters for evaluation')
     train_args.add_argument('--weight_penalty', action='store_true',
                                 help='Specify whether to add a penalty based on model weights.')
     train_args.add_argument('--alpha', type=float, default=0.25,
@@ -108,8 +114,7 @@ if __name__ == "__main__":
                                 help='Specify whether to add an lr scheduler')
     train_args.add_argument('--end_lr', type=float, default=0.0001,
                                 help='Specify goal end learning rate.')
-    train_args.add_argument('--residual', action='store_true',
-                                help='')
+
     args = parser.parse_args()
 
     # CONNECT TO CUDA
@@ -126,24 +131,7 @@ if __name__ == "__main__":
     args.out_dir = Path(args.out_dir)
     os.makedirs(args.out_dir, exist_ok=True)
     assert args.train_dir.exists() and args.val_dir.exists() and args.test_dir.exists(), 'One of the data directories does not exists'
-
-    # name_str =  f'model_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
-    # if args.alpha is not None:
-    #     name_str += f'_a{args.alpha}'
-    # if args.weight_penalty:
-    #     name_str += '_weightpenalty'
-    # if args.update:
-    #     name_str += f'_{args.penalty_scheduler}'
-    # if args.early_stop:
-    #     name_str += f'_earlystop'
-    # if args.batchnorm_first:
-    #     name_str += f'_bnf'
-    # if args.final_tanh:
-    #     name_str += f'_tanh'
-    # save_path = args.out_dir / name_str
-    # save_path.mkdir(exist_ok=True)
-    #print('Saving results to:', save_path)
-    if args.sparse_loss == 'filter':
+    if args.encoding_loss == 'filter':
         assert args.cutoff_freq is not None and args.n_taps is not None
         filter_loss = True
         args.alpha = 1
@@ -163,9 +151,9 @@ if __name__ == "__main__":
         print('Loading features from local filesystem.')
 
     # SET UP DATASETS/DATALOADERS
-    train_dataset = EMADataset(root_dir=args.train_dir, recursive=args.recursive, cci_features=cci_features)
-    val_dataset = EMADataset(root_dir=args.val_dir, recursive=args.recursive, cci_features=cci_features)
-    test_dataset = EMADataset(root_dir=args.test_dir, recursive=args.recursive, cci_features=cci_features)
+    train_dataset = FeatureDataset(root_dir=args.train_dir, recursive=args.recursive, cci_features=cci_features)
+    val_dataset = FeatureDataset(root_dir=args.val_dir, recursive=args.recursive, cci_features=cci_features)
+    test_dataset = FeatureDataset(root_dir=args.test_dir, recursive=args.recursive, cci_features=cci_features)
 
     if not args.eval_only:
         assert not bool(set(train_dataset.files) & set(val_dataset.files)), 'Overlapping files between train and validation set.'
@@ -182,18 +170,18 @@ if __name__ == "__main__":
             model_config = json.load(f)
     else:
         model_config = {'model_type':args.model_type, 'inner_size':args.inner_size, 'n_encoder':args.n_encoder, 'initial_ekernel':args.initial_ekernel, 'n_decoder':args.n_decoder, 'initial_dkernel':args.initial_dkernel, 'input_dim':args.input_dim, 'checkpoint':args.checkpoint,
-                        'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'autoencoder_loss':args.autoencoder_loss, 'sparse_loss':args.sparse_loss, 
+                        'epochs':args.epochs, 'learning_rate':args.lr, 'batch_sz': args.batch_sz, 'optimizer':args.optimizer, 'reconstruction_loss':args.reconstruction_loss, 'encoding_loss':args.encoding_loss, 
                         'penalty_scheduler':args.penalty_scheduler, 'weight_penalty':args.weight_penalty, 'alpha': args.alpha, 'alpha_epochs':args.alpha_epochs, 'update':args.update, 'early_stop':args.early_stop, 
                         'patience':args.patience, 'batchnorm_first':args.batchnorm_first, 'final_tanh': args.final_tanh, 'lr_scheduler': args.lr_scheduler, 'end_lr':args.end_lr, 'cutoff_freq':args.cutoff_freq, 'n_taps':args.n_taps,
-                        'residual':args.residual}
+                        'residual':args.residual, 'exclude_all_norm':args.exclude_all_norm, 'n_filters':args.n_filters}
 
     if args.eval_only:
         args.lr = model_config['learning_rate']
         args.epochs = model_config['epochs']
         args.batch_sz = model_config['batch_sz']
         args.optimizer = model_config['optimizer']
-        args.autoencoder_loss = model_config['autoencoder_loss']
-        args.sparse_loss = model_config['sparse_loss']
+        args.reconstruction_loss = model_config['reconstruction_loss']
+        args.encoding_loss = model_config['encoding_loss']
         args.weight_penalty = model_config['weight_penalty']
         args.alpha = model_config['alpha']
         args.update =  model_config['update']
@@ -210,11 +198,13 @@ if __name__ == "__main__":
         args.cutoff_freq = model_config['cutoff_freq']
         args.n_taps = model_config['n_taps']
         args.residual = model_config['residual']
+        args.exclude_all_norm = model_config['exclude_all_norm']
+        args.n_filters = model_config['n_filters']
         ##NTAPS CUTOFF FREQ
 
 
-    name_str =  f'model_e{args.n_encoder}_iek{args.initial_ekernel}_d{args.n_decoder}_idk{args.initial_dkernel}_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.autoencoder_loss}_{args.sparse_loss}'
-    if args.sparse_loss == 'filter':
+    name_str =  f'model_e{args.n_encoder}_iek{args.initial_ekernel}_d{args.n_decoder}_idk{args.initial_dkernel}_lr{args.lr}e{args.epochs}bs{args.batch_sz}_{args.optimizer}_{args.reconstruction_loss}_{args.encoding_loss}'
+    if args.encoding_loss == 'filter':
         name_str += f'c{args.cutoff_freq}n{args.n_taps}'
         if args.residual:
             name_str += '_res'
@@ -233,6 +223,8 @@ if __name__ == "__main__":
         name_str += f'_tanh'
     if args.lr_scheduler:
         name_str += f'_explr{args.end_lr}'
+    if args.exclude_all_norm:
+        name_str += f'_nonorm'
     save_path = args.out_dir / name_str
     save_path.mkdir(exist_ok=True)
 
@@ -242,7 +234,9 @@ if __name__ == "__main__":
 
     # INITIALIZE MODEL / LOAD CHECKPOINT IF NECESSARY
     if args.model_type=='cnn':
-        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'], initial_ekernel=model_config['initial_ekernel'], initial_dkernel=model_config['initial_dkernel'])
+        model = CNNAutoEncoder(input_dim=model_config['input_dim'], n_encoder=model_config['n_encoder'], n_decoder=model_config['n_decoder'], 
+                               inner_size=model_config['inner_size'], batchnorm_first=model_config['batchnorm_first'], final_tanh=model_config['final_tanh'],
+                                 initial_ekernel=model_config['initial_ekernel'], initial_dkernel=model_config['initial_dkernel'], exclude_final_norm =model_config['exclude_final_norm'], exclude_all_norm=model_config['exclude_all_norm'])
     else:
         raise NotImplementedError(f'{args.model_type} not implemented.')
     
@@ -255,8 +249,8 @@ if __name__ == "__main__":
 
 
     if not args.eval_only:
-        optim, criterion, scheduler = set_up_train(model=model, device =device, optim_type=args.optimizer, lr=args.lr, loss1_type=args.autoencoder_loss,
-                                        loss2_type=args.sparse_loss, alpha=args.alpha, weight_penalty=args.weight_penalty,
+        optim, criterion, scheduler = set_up_train(model=model, device =device, optim_type=args.optimizer, lr=args.lr, loss1_type=args.reconstruction_loss,
+                                        loss2_type=args.encoding_loss, alpha=args.alpha, weight_penalty=args.weight_penalty,
                                         penalty_scheduler=args.penalty_scheduler, lr_scheduler=args.lr_scheduler, epochs=args.alpha_epochs, end_lr=args.end_lr)
 
         model = train(train_loader=train_loader, val_loader=val_loader, model=model, 
@@ -271,35 +265,7 @@ if __name__ == "__main__":
         torch.save(model.state_dict(), str(mpath / f'{model.get_type()}_final.pth'))
     
     #Evaluate
-
-    # if args.eval_only:
-    #     lr = model_config['learning_rate']
-    #     epochs = model_config['epochs']
-    #     batch_sz = model_config['batch_sz']
-    #     optimizer = model_config['optimizer']
-    #     al = model_config['autoencoder_loss']
-    #     sl = model_config['sparse_loss']
-    #     name_str =  f'model_lr{lr}e{epochs}bs{batch_sz}_{optimizer}_{al}_{sl}'
-    #     alpha = model_config['alpha']
-    #     if alpha is not None:
-    #         name_str += f'_a{alpha}'
-    #     wp = model_config['weight_penalty']
-    #     if wp:
-    #         name_str += '_weightpenalty'
-    #     update =  model_config['update']
-    #     if update:
-    #         ps =  model_config['penalty_scheduler']
-    #         name_str += f'_{ps}'
-    #     es = model_config['early_stop']
-    #     if es:
-    #         name_str += f'_earlystop'
-    #     if model_config['batchnorm_firs']':
-    #         name_str += f'_bnf'
-    #     if model_config['final_tanh']:
-    #         name_str += f'_tanh'
-    #     save_path = args.out_dir / name_str
-    #     save_path.mkdir(exist_ok=True)
-       
+    
     print('Saving results to:', save_path)
     metrics = evaluate(test_loader=test_loader, maxt=test_dataset.maxt, model=model, save_path=save_path, device=device, 
-                       encode=args.encode, decode=args.decode,n_filters=20,ntaps=args.n_taps)
+                       encode=args.encode, decode=args.decode,n_filters=args.n_filters,ntaps=args.n_taps)

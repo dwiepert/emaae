@@ -2,7 +2,7 @@
 Evaluate a trained model
 
 Author(s): Daniela Wiepert
-Last modified: 02/10/2025
+Last modified: 04/13/2025
 """
 #IMPORTS
 ##built-in
@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
-from emaae.utils import fro_norm3d, calc_sparsity, get_filters, filter_encoding, filter_matrix
+from emaae.utils import fro_norm3d, filter_encoding, filter_matrix
 
 def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, 
              encode:bool=True, decode:bool=True, n_filters:int=20, ntaps:int=51) -> Dict[str,List[float]]:
@@ -25,11 +25,14 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
     Evaluate mean squared error and sparsity (number of zero entries)
 
     :param test_loader: test dataloader object
+    :param maxt: int, max number of time points in the test dataset
     :param model: trained model
     :param save_path: str/Path, path to save metrics to
     :param device: torch device
-    :param encode: bool, indicate whether to save encodings
-    :param decode: bool, indicate whether to save decodings
+    :param encode: bool, indicate whether to save encodings (default = True)
+    :param decode: bool, indicate whether to save decodings (default = True)
+    :param n_filters: int, number of filters to sweep for evaluation (default = 20)
+    :param ntaps: int, filter size (default = 51)
     :return metrics: Dictionary of metrics
     """
     save_path = Path(save_path)
@@ -69,18 +72,13 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
 
             outputs = model.decode(encoded)
             
+            # SAVE DECODINGS
             if decode:
-                #print(fname)
                 torch.save(outputs.cpu(),dpath/f'{fname}.pt')
-                #print(f'saved to {dpath}')
 
             targets = np.squeeze(inputs.cpu().numpy())
             outputs = np.squeeze(outputs.cpu().numpy())
             mse.append(mean_squared_error(targets, outputs))
-
-            # encoded = np.squeeze(encoded.cpu().numpy())
-            # #encodings.append(encoded)
-            # sparsity.append(calc_sparsity(encoded))
 
             ### PSD and low pass filtering 
             fm = sweep_filters(encoded=encoded, targets=targets, conv_matrices=conv_matrices, cutoffs=cutoffs, model=model, device=device)
@@ -89,10 +87,7 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             #print('baseline filtering')
             bfm = sweep_filters(inputs, targets, conv_matrices, cutoffs, model=None, device=device)
             baseline_filtered.append(bfm)
-            #frequencies, psd = welch(encoded, 50)
-            #freqs.append(frequencies)
-            #psd.append(psd)
-    
+
     # SAVE METRICS
     filtered_mse = np.asarray(filtered_mse)
     baseline_filtered = np.asarray(baseline_filtered)
@@ -105,7 +100,18 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
     return metrics
 
 def sweep_filters(encoded:torch.tensor, targets:np.ndarray,conv_matrices:List[np.ndarray], cutoffs:List[float], model:CNNAutoEncoder, device, ntaps:int=51) -> List[float]:
-    """"""
+    """
+    Sweep filters over the encoding
+
+    :param encoded: tensor, encoded input
+    :param targets: np.ndarray, array of target values for reconstruction
+    :param conv_matrices: list of numpy arrays, contains the matrices for filter convolution
+    :param cutoffs: list of floats, list of all frequencies to sweep
+    :param model: trained model
+    :param device: torch device
+    :param ntaps: int, filter size (default = 51)
+    :return mse: np.ndarray of the mse for each filter
+    """
     #encoded = np.expand_dims(encoded, axis=0)
     mse = []
     for i in range(len(conv_matrices)):
