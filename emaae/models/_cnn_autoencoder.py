@@ -114,7 +114,7 @@ class CNNAutoEncoder(nn.Module):
 
             if (n < len(params['in_size']) - 1):
                 if batchnorm_first and (not exclude_all_norm):
-                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
+                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['in_size'][n])
                 
                 block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
 
@@ -124,7 +124,7 @@ class CNNAutoEncoder(nn.Module):
             
             else:
                 if batchnorm_first and (not exclude_final_norm) and (not exclude_all_norm):
-                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['out_size'][n])
+                    block['batchnorm'] = nn.BatchNorm1d(num_features=params['in_size'][n])
                     #block['instancenorm'] = nn.InstanceNorm1d(num_features=params['out_size'][n])
                 
                 block['conv'] = nn.Conv1d(in_channels=params['in_size'][n],out_channels=params['out_size'][n], kernel_size=params['kernel_size'][n], stride=1, padding="same")
