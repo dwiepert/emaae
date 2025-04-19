@@ -449,7 +449,9 @@ def plot_filtermse(root):
     plt.savefig(str(save_path / f'allfilters.png'),dpi=300)
     plt.clf()
 
+    #fmse_melted = fmse_melted.loc[fmse_melted['cutoff'] <= 0.2]
     avg_filtered = fmse_melted.groupby('cutoff').mean()
+    #bmse_melted = fmse_melted.loc[bmse_melted['cutoff'] <= 0.2]
     avg_baseline = bmse_melted.groupby('cutoff').mean()
     plt.plot(avg_filtered.index.tolist(),avg_filtered['mse'].tolist(), color='black', label='Encodings')
     plt.plot(avg_baseline.index.tolist(),avg_baseline['mse'].tolist(), color='crimson', linestyle='--', label='Baseline')
@@ -462,8 +464,8 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = './data/emaae/model_e2_iek11_d2_idk5_lr0.0001e250bs16_adamw_mse_filterc0.2n51_res_a1_earlystop_bnf'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
-test_ema = './data/librispeech/test/sparc'
+root = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/emaae/model_e2_iek5_d2_idk5_lr0.0001e250bs16_adamw_mse_filterc0.2n51_res_a1_earlystop_bnf_nonorm'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
+test_ema = '/Users/dwiepert/Documents/SCHOOL/Grad_School/Huth/data/librispeech/test/sparc'
 
 plot_logs(root, loss_type=None)
 plot_filtermse(root)

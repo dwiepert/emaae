@@ -2,7 +2,7 @@
 CNN Autoencoder
 
 Author(s): Daniela Wiepert
-Last modified: 02/10/2025
+Last modified: 04/19/2025
 """
 #IMPORTS
 ##built-in
@@ -74,7 +74,22 @@ class CNNAutoEncoder(nn.Module):
             return {'in_size': [self.input_dim, 256],
                       'out_size': [256,self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
-
+        elif self.n_encoder == 3 and self.input_dim == 1024 and self.inner_size == 1024:
+             return {'in_size': [self.input_dim, self.inner_size, self.inner_size],
+                      'out_size': [self.inner_size,self.inner_size, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3,3]}
+        elif self.n_encoder == 3 and self.input_dim == 1024 and self.inner_size == 2048:
+             return {'in_size': [self.input_dim, 1280, 1536],
+                      'out_size': [1280,1536, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3,3]}
+        elif self.n_encoder == 2 and self.input_dim == 1024 and self.inner_size == 1024:
+             return {'in_size': [self.input_dim, self.inner_size],
+                      'out_size': [self.inner_size, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
+        elif self.n_encoder == 2 and self.input_dim == 1024 and self.inner_size == 2048:
+             return {'in_size': [self.input_dim,1536],
+                      'out_size': [1536, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
     
     def _decoder_block_options(self):
         """
@@ -95,6 +110,23 @@ class CNNAutoEncoder(nn.Module):
             return {'in_size': [self.inner_size, 256],
                       'out_size': [256, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 2 and self.input_dim == 1024 and self.inner_size == 1024:
+            return {'in_size': [self.inner_size, self.inner_size],
+                      'out_size': [self.inner_size, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 3 and self.input_dim == 1024 and self.inner_size == 1024:
+            return {'in_size': [self.inner_size, self.inner_size, self.inner_size],
+                      'out_size': [self.inner_size, self.inner_size, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3, 3]}
+        elif self.n_decoder == 2 and self.input_dim == 1024 and self.inner_size == 2048:
+            return {'in_size': [self.inner_size,1536],
+                      'out_size': [1536, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 3 and self.input_dim == 1024 and self.inner_size == 1024:
+            return {'in_size': [self.inner_size, 1536, 1280],
+                      'out_size': [1536, 1280, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3, 3]}
+        
         
     def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_norm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False, exclude_all_norm:bool=False) -> nn.Sequential:
         """

@@ -8,7 +8,7 @@ To install, use
 
 ```
 $ git clone https://github.com/dwiepert/emaae.git
-$ cd audio_features
+$ cd emaae
 $ pip install . 
 ```
 

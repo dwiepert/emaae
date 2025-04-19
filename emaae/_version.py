@@ -1,4 +1,4 @@
-__version__ = '0.4.3'
+__version__ = '0.4.4'
 
 #change log:
 # 0.0.0: initialized repo
@@ -20,3 +20,4 @@ __version__ = '0.4.3'
 # 0.4.1: device fix
 # 0.4.2: debugging
 # 0.4.3: documentation
+# 0.4.4: add blocks for video features
