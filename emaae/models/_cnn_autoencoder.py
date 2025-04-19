@@ -35,7 +35,7 @@ class CNNAutoEncoder(nn.Module):
         self.initial_ekernel=initial_ekernel
         self.initial_dkernel=initial_dkernel
         self.input_dim = input_dim
-        if self.input_dim not in [13]:
+        if self.input_dim not in [13, 768]:
             raise NotImplementedError(f'Model not compatible with {self.input_dim} dimensional features.')
         self.n_encoder = n_encoder
         if self.n_encoder not in [2,3,4,5]:
@@ -44,7 +44,7 @@ class CNNAutoEncoder(nn.Module):
         if self.n_decoder not in [2,3,4,5]:
             raise NotImplementedError(f'Model not compatible with {self.n_decoder} decoder blocks.')
         self.inner_size = inner_size
-        if self.inner_size not in [512,768,1024]:
+        if self.inner_size not in [512,768,1024,2048]:
             raise NotImplementedError(f'Model not compatible with an inner dimension of {self.inner_size}.')
 
         self.batchnorm_first = batchnorm_first
@@ -74,19 +74,21 @@ class CNNAutoEncoder(nn.Module):
             return {'in_size': [self.input_dim, 256],
                       'out_size': [256,self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
-        elif self.n_encoder == 3 and self.input_dim == 1024 and self.inner_size == 1024:
+        
+        ### VIDEO FEATURES
+        elif self.n_encoder == 3 and self.input_dim == 768 and self.inner_size == 768:
              return {'in_size': [self.input_dim, self.inner_size, self.inner_size],
                       'out_size': [self.inner_size,self.inner_size, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3,3]}
-        elif self.n_encoder == 3 and self.input_dim == 1024 and self.inner_size == 2048:
+        elif self.n_encoder == 3 and self.input_dim == 768 and self.inner_size == 2048:
              return {'in_size': [self.input_dim, 1280, 1536],
                       'out_size': [1280,1536, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3,3]}
-        elif self.n_encoder == 2 and self.input_dim == 1024 and self.inner_size == 1024:
+        elif self.n_encoder == 2 and self.input_dim == 768 and self.inner_size == 768:
              return {'in_size': [self.input_dim, self.inner_size],
                       'out_size': [self.inner_size, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
-        elif self.n_encoder == 2 and self.input_dim == 1024 and self.inner_size == 2048:
+        elif self.n_encoder == 2 and self.input_dim == 768 and self.inner_size == 2048:
              return {'in_size': [self.input_dim,1536],
                       'out_size': [1536, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
@@ -110,19 +112,21 @@ class CNNAutoEncoder(nn.Module):
             return {'in_size': [self.inner_size, 256],
                       'out_size': [256, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
-        elif self.n_decoder == 2 and self.input_dim == 1024 and self.inner_size == 1024:
+        
+        ### VIDEO FEATURES
+        elif self.n_decoder == 2 and self.input_dim == 768 and self.inner_size == 768:
             return {'in_size': [self.inner_size, self.inner_size],
                       'out_size': [self.inner_size, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
-        elif self.n_decoder == 3 and self.input_dim == 1024 and self.inner_size == 1024:
+        elif self.n_decoder == 3 and self.input_dim == 768 and self.inner_size == 768:
             return {'in_size': [self.inner_size, self.inner_size, self.inner_size],
                       'out_size': [self.inner_size, self.inner_size, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3, 3]}
-        elif self.n_decoder == 2 and self.input_dim == 1024 and self.inner_size == 2048:
+        elif self.n_decoder == 2 and self.input_dim == 768 and self.inner_size == 2048:
             return {'in_size': [self.inner_size,1536],
                       'out_size': [1536, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
-        elif self.n_decoder == 3 and self.input_dim == 1024 and self.inner_size == 1024:
+        elif self.n_decoder == 3 and self.input_dim == 768 and self.inner_size == 1024:
             return {'in_size': [self.inner_size, 1536, 1280],
                       'out_size': [1536, 1280, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3, 3]}
