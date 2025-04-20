@@ -7,7 +7,7 @@ Last modified: 04/12/2025
 #IMPORTS
 ##built-in
 from pathlib import Path
-from typing import Dict, Union, List
+from typing import Dict, Union
 import warnings
 ##third party
 import numpy as np

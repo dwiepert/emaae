@@ -132,7 +132,8 @@ class CNNAutoEncoder(nn.Module):
                       'kernel_size':[self.initial_dkernel,3, 3]}
         
         
-    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_norm:bool=False, batchnorm_first:bool=True, final_tanh:bool=False, exclude_all_norm:bool=False) -> nn.Sequential:
+    def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_norm:bool=False, 
+                           batchnorm_first:bool=True, final_tanh:bool=False, exclude_all_norm:bool=False) -> nn.Sequential:
         """
         Generate a sequence of layers
 

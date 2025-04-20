@@ -39,7 +39,6 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
     mse = []
     filtered_mse = []
     baseline_filtered = []
-    sparsity = []
     model.eval()
 
     cutoffs = np.linspace((1/n_filters),1,n_filters, endpoint=False)
@@ -99,7 +98,8 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
 
     return metrics
 
-def sweep_filters(encoded:torch.tensor, targets:np.ndarray,conv_matrices:List[np.ndarray], cutoffs:List[float], model:CNNAutoEncoder, device, ntaps:int=51) -> List[float]:
+def sweep_filters(encoded:torch.tensor, targets:np.ndarray,conv_matrices:List[np.ndarray], cutoffs:List[float], 
+                  model:CNNAutoEncoder, device, ntaps:int=51) -> List[float]:
     """
     Sweep filters over the encoding
 

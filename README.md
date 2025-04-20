@@ -124,6 +124,6 @@ python3 run_emaae.py --train_dir=<PATH_TO_DIR>
 --reconstruction_loss=tvl2 --batchnorm_first
 ```
 ## Visualizations
-Plots are all created using R ([Aplotting.py](https://github.com/dwiepert/emaae/main/tree/helpers/plotting.py)).
+Plots are all created using R ([plotting.py](https://github.com/dwiepert/emaae/main/tree/helpers/plotting.py)).
 
 
