@@ -55,6 +55,7 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
         norms.append(float(fro_norm3d(w.cpu().numpy())))
     
     if encode:
+        print(save_path)
         epath = save_path /'encodings'
         epath.mkdir(exist_ok=True)
         print(epath)
@@ -69,10 +70,10 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             
             # SAVE ENCODINGS
             fname = data['files'][0]
-            print(fname)
+            #print(fname)
             if encode:
                 path = epath /f'{fname}.npz'
-                print(path)
+                #print(path)
                 #np.savez(path,encoded.cpu().numpy())
                 #print('saved')
                 #torch.save(encoded.cpu(), path)
