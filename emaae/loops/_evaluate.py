@@ -70,13 +70,9 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             
             # SAVE ENCODINGS
             fname = Path(data['files'][0]).with_suffix('.npz').name
-            print(fname)
             #print(fname)
             if encode:
-                print(epath / fname)
-                path = epath /f'{fname}.npz'
-                #print(path)
-                #np.savez(path,encoded.cpu().numpy())
+                np.savez(epath /fname ,encoded.cpu().numpy())
                 #print('saved')
                 #torch.save(encoded.cpu(), path)
 
