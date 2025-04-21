@@ -35,6 +35,8 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
     :param ntaps: int, filter size (default = 51)
     :return metrics: Dictionary of metrics
     """
+    if encode:
+        print('Saving encoding')
     save_path = Path(save_path)
     mse = []
     filtered_mse = []
@@ -67,7 +69,9 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             # SAVE ENCODINGS
             fname = data['files'][0]
             if encode:
-                torch.save(encoded.cpu(),epath/f'{fname}.pt')
+                path = epath /f'{fname}.npz'
+                np.savez(encoded.cpu().numpy(),path)
+                #torch.save(encoded.cpu(), path)
 
             outputs = model.decode(encoded)
             

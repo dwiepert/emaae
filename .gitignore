@@ -16,3 +16,4 @@ encoding/plots.py
 encoding/eval_encodings.py
 encoding/plots.py
 encoding/visualize_cnn.py
+flatplots.ipynb

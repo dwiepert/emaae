@@ -464,15 +464,15 @@ def plot_filtermse(root):
     plt.close()
 
 
-root = './data/emaae/model_e2_iek5_d2_idk5_lr0.0001e250bs16_adamw_mse_filterc0.2n51_res_a1_earlystop_bnf_nonorm'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
+root = './data/video_sfa/model_e2_iek5_d2_idk5_lr0.0001e1000bs8_adamw_mse_tvl2_a0.001_earlystop_nonorm'  #model_e3_iek5_d3_idk5_lr0.0001e250bs16_adamw_mse_tvl2_a0.0001_earlystop_bnf' 
 test_ema = './data/librispeech/test/sparc'
 
-plot_logs(root, loss_type=None)
+plot_logs(root, loss_type='tvl2')
 plot_filtermse(root)
-d = plot_reconstructions(root, test_ema)
+#d = plot_reconstructions(root, test_ema)
 #filtermse_baseline(test_ema)
-plot_psd(root, flist=d)
-plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7, flist=d)
+#plot_psd(root, flist=d)
+#plot_activations(root, test_ema, upper_text=10**8, lower_text=10**7, flist=d)
 
 
 
