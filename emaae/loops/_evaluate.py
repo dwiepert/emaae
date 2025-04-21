@@ -57,6 +57,7 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
     if encode:
         epath = save_path /'encodings'
         epath.mkdir(exist_ok=True)
+        print(epath)
     if decode:
         dpath = save_path /'decodings'
         dpath.mkdir(exist_ok=True)
@@ -68,11 +69,12 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             
             # SAVE ENCODINGS
             fname = data['files'][0]
+            print(fname)
             if encode:
                 path = epath /f'{fname}.npz'
                 print(path)
-                np.savez(path,encoded.cpu().numpy())
-                print('saved')
+                #np.savez(path,encoded.cpu().numpy())
+                #print('saved')
                 #torch.save(encoded.cpu(), path)
 
             outputs = model.decode(encoded)
