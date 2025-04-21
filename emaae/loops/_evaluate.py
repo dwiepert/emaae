@@ -70,7 +70,9 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             fname = data['files'][0]
             if encode:
                 path = epath /f'{fname}.npz'
+                print(path)
                 np.savez(path,encoded.cpu().numpy())
+                print('saved')
                 #torch.save(encoded.cpu(), path)
 
             outputs = model.decode(encoded)
