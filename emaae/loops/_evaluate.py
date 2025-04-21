@@ -69,9 +69,11 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             encoded = model.encode(inputs)
             
             # SAVE ENCODINGS
-            fname = data['files'][0]
+            fname = Path(data['files'][0]).with_suffix('.npz').name
+            print(fname)
             #print(fname)
             if encode:
+                print(epath / fname)
                 path = epath /f'{fname}.npz'
                 #print(path)
                 #np.savez(path,encoded.cpu().numpy())
