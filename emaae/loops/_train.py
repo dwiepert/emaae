@@ -139,6 +139,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
             if filter_loss and residual:
                 outputs = torch.add(outputs, low_inputs)
+                del low_inputs
 
             # LOSS
             if weight_penalty:
@@ -152,6 +153,10 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         
             # UPDATE
             optim.step()
+            del inputs
+            del encoding
+            del outputs
+            del loss
 
         # TRAINING LOG
         avg_loss = running_loss / len(train_loader)
@@ -163,6 +168,8 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             json.dump(log, f)
 
         criterion.clear_log()
+        del avg_loss
+        del log
 
 
         # VALIDATION (every 5 epochs)
@@ -196,21 +203,31 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
                 if filter_loss and residual:
                     voutputs = torch.add(voutputs, low_vinputs)
+                    del low_vinputs
 
                 # LOSS
                 vloss = criterion(decoded=voutputs, dec_target=vinputs, encoded=vencoding, weights=vweights)
                 running_vloss += vloss.item()
+
+                del vinputs
+                del vencoding
+                del voutputs
+                del vloss
             
         # VALIDATION LOG
         avg_vloss = running_vloss / len(val_loader)
         vlog = criterion.get_log()
         vlog['avg_loss'] = avg_vloss
         vlog['epoch'] = e
+
         
         with open(str(lpath / f'vallog{e}.json'), 'w') as f:
             json.dump(vlog, f)
         
         criterion.clear_log()
+
+        del avg_vloss
+        del vlog
 
 
         # EARLY STOPPING
