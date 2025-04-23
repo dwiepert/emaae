@@ -114,6 +114,8 @@ if __name__ == "__main__":
                                 help='Specify whether to add an lr scheduler')
     train_args.add_argument('--end_lr', type=float, default=0.0001,
                                 help='Specify goal end learning rate.')
+    train_args.add_argument('--save_epochs', action='store_true',
+                                help='Specify whether to save out models every 5 epochs.')
 
     args = parser.parse_args()
 
@@ -259,7 +261,7 @@ if __name__ == "__main__":
                       device=device, optim=optim, criterion=criterion, lr_scheduler=scheduler, save_path=save_path, 
                       epochs=args.epochs, alpha_epochs=args.alpha_epochs, update=args.update, 
                       early_stop=args.early_stop, patience=args.patience,weight_penalty=args.weight_penalty,
-                      filter_loss=filter_loss, maxt=max(train_dataset.maxt, val_dataset.maxt),filter_cutoff=args.cutoff_freq, ntaps=args.n_taps, residual=args.residual)
+                      filter_loss=filter_loss, maxt=max(train_dataset.maxt, val_dataset.maxt),filter_cutoff=args.cutoff_freq, save_epochs=args.save_epochs, ntaps=args.n_taps, residual=args.residual)
         
         #SAVE FINAL TRAINED MODEL
         mpath = save_path / 'models'

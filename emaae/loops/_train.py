@@ -68,7 +68,7 @@ def set_up_train(model:Union[CNNAutoEncoder], device, optim_type:str='adamw', lr
 def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEncoder], device, 
           optim:Union[torch.optim.AdamW, torch.optim.Adam], criterion:CustomLoss, lr_scheduler:ExponentialLR, save_path:Union[str, Path],
           epochs:int=500, alpha_epochs:int=15, update:bool=False, early_stop:bool=True, patience:int=500, weight_penalty:bool=False, residual:bool=False,
-          filter_loss:bool=False, **kwargs) -> Union[CNNAutoEncoder]:
+          filter_loss:bool=False, save_epochs:bool=False, **kwargs) -> Union[CNNAutoEncoder]:
     """
     Train a model
 
@@ -87,6 +87,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
     :param patience: int, early stop patience (default = 500)
     :param weight_penalty: boolean, indicate whether weight penalty is being added to loss (default=False)
     :param filter_loss: bool, True if running low pass filter over encoding during training (default=False)
+    :param save_epochs: bool, True if saving models from multiple epochs
     :param kwargs: args dictionary with additional arguments for using filter_loss
     :return model: trained autoencoder model
     
@@ -227,7 +228,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
 
         print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
 
-        if (e == 0) or ((e+1) % 5 == 0):
+        if ((e == 0) or ((e+1) % 5 == 0)) and save_epochs:
             print('Saving epoch...')
             path = mpath / f'{model.get_type()}_e{e+1}.pth'
             torch.save(model.state_dict(), str(path))
