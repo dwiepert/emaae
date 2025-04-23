@@ -35,7 +35,7 @@ class CNNAutoEncoder(nn.Module):
         self.initial_ekernel=initial_ekernel
         self.initial_dkernel=initial_dkernel
         self.input_dim = input_dim
-        if self.input_dim not in [13, 768]:
+        if self.input_dim not in [13, 768, 1408]:
             raise NotImplementedError(f'Model not compatible with {self.input_dim} dimensional features.')
         self.n_encoder = n_encoder
         if self.n_encoder not in [2,3,4,5]:
@@ -44,7 +44,7 @@ class CNNAutoEncoder(nn.Module):
         if self.n_decoder not in [2,3,4,5]:
             raise NotImplementedError(f'Model not compatible with {self.n_decoder} decoder blocks.')
         self.inner_size = inner_size
-        if self.inner_size not in [512,768,1024,2048]:
+        if self.inner_size not in [512,768,1024,1408, 2048]:
             raise NotImplementedError(f'Model not compatible with an inner dimension of {self.inner_size}.')
 
         self.batchnorm_first = batchnorm_first
