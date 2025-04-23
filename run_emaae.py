@@ -267,9 +267,16 @@ if __name__ == "__main__":
         mpath = save_path / 'models'
         mpath.mkdir(exist_ok=True)
         torch.save(model.state_dict(), str(mpath / f'{model.get_type()}_final.pth'))
+
+        del optim
+        del criterion
+        del scheduler
+    
     
     #Evaluate
     
     print('Saving results to:', save_path)
     metrics = evaluate(test_loader=test_loader, maxt=test_dataset.maxt, model=model, save_path=save_path, device=device, 
                        encode=args.encode, decode=args.decode,n_filters=args.n_filters,ntaps=args.n_taps)
+    
+    del model
