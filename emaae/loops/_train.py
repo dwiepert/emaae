@@ -168,8 +168,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
             json.dump(log, f)
 
         criterion.clear_log()
-        del avg_loss
-        del log
+        
 
 
         # VALIDATION (every 5 epochs)
@@ -177,6 +176,8 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         eet = time.time() # epoch ending time
         print(f'Average loss at Epoch {e}: {avg_loss}')
         print(f'Epoch {e} run time: {(eet-est)/60}')
+        del avg_loss
+        del log
 
         model.eval()
         running_vloss=0.0
@@ -226,10 +227,7 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
         
         criterion.clear_log()
 
-        del avg_vloss
-        del vlog
-
-
+        
         # EARLY STOPPING
         if early_stop:
             early_stopping(avg_vloss, model, e)
@@ -244,6 +242,8 @@ def train(train_loader:DataLoader, val_loader:DataLoader, model:Union[CNNAutoEnc
                     break
 
         print(f'Average Validation Loss at Epoch {e}: {avg_vloss}')
+        del avg_vloss
+        del vlog
 
         if ((e == 0) or ((e+1) % 5 == 0)) and save_epochs:
             print('Saving epoch...')
