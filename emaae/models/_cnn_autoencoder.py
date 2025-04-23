@@ -92,6 +92,21 @@ class CNNAutoEncoder(nn.Module):
              return {'in_size': [self.input_dim,1536],
                       'out_size': [1536, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
+        
+
+        ### VIDEO FEATURES TAKE 2
+        elif self.n_encoder == 3 and self.input_dim == 1408 and self.inner_size == 1408:
+            return {'in_size': [self.input_dim, self.inner_size, self.inner_size],
+                    'out_size': [self.inner_size,self.inner_size, self.inner_size],
+                    'kernel_size':[self.initial_ekernel,3,3]}
+        elif self.n_encoder == 2 and self.input_dim == 1408 and self.inner_size == 1408:
+             return {'in_size': [self.input_dim, self.inner_size],
+                      'out_size': [self.inner_size, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
+        elif self.n_encoder == 2 and self.input_dim == 1408 and self.inner_size == 2048:
+             return {'in_size': [self.input_dim,1700],
+                      'out_size': [1700, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
     
     def _decoder_block_options(self):
         """
@@ -130,6 +145,21 @@ class CNNAutoEncoder(nn.Module):
             return {'in_size': [self.inner_size, 1536, 1280],
                       'out_size': [1536, 1280, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3, 3]}
+        
+        ### VIDEO FEATURES TAKE 2
+        elif self.n_decoder == 2 and self.input_dim == 1408 and self.inner_size == 1408:
+            return {'in_size': [self.inner_size, self.inner_size],
+                      'out_size': [self.inner_size, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 3 and self.input_dim == 1408 and self.inner_size == 1408:
+            return {'in_size': [self.inner_size, self.inner_size, self.inner_size],
+                      'out_size': [self.inner_size, self.inner_size, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3, 3]}
+        elif self.n_decoder == 2 and self.input_dim == 1408 and self.inner_size == 2048:
+            return {'in_size': [self.inner_size,1700],
+                      'out_size': [1700, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+
         
         
     def _generate_sequence(self, params:Dict[str, List[int]], exclude_final_norm:bool=False, 
