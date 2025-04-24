@@ -5,4 +5,5 @@ __all__ = ['fro_norm3d',
            'calc_sparsity', 
            'filter_encoding',
            'get_filters',
-           'filter_matrix']
+           'filter_matrix',
+           'add_white_noise']

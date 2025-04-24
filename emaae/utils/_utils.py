@@ -126,3 +126,8 @@ def get_filters(n_filters:int=20, ntaps:int=51) -> Tuple[List[np.ndarray], List[
     for c in cutoffs:
         filters.append(firwin(numtaps=ntaps,cutoff=c))
     return filters, cutoffs
+
+def add_white_noise(feature, mean=0, std=1, device=torch.device('cuda')):
+    noise = torch.from_numpy(np.random.normal(mean,std, feature.shape)).to(feature.dtype).to(device)
+    noisy_feature = torch.add(feature, noise).to(device)
+    return noisy_feature

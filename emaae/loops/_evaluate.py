@@ -7,6 +7,7 @@ Last modified: 04/13/2025
 #IMPORTS
 ##built-in
 import json
+import math
 from pathlib import Path
 from typing import Union, Dict, List
 ##third party
@@ -17,7 +18,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 ##local
 from emaae.models import CNNAutoEncoder
-from emaae.utils import fro_norm3d, filter_encoding, filter_matrix
+from emaae.utils import fro_norm3d, filter_encoding, filter_matrix, add_white_noise
 
 def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save_path:Union[str,Path], device, 
              encode:bool=True, decode:bool=True, n_filters:int=20, ntaps:int=51) -> Dict[str,List[float]]:
@@ -41,6 +42,9 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
     mse = []
     filtered_mse = []
     baseline_filtered = []
+    noisy_filtered = []
+
+    ###TODO - WHITENOISE FILTERED!!!!
     model.eval()
 
     cutoffs = np.linspace((1/n_filters),1,n_filters, endpoint=False)
@@ -94,12 +98,22 @@ def evaluate(test_loader:DataLoader, maxt:int, model:Union[CNNAutoEncoder], save
             bfm = sweep_filters(inputs, targets, conv_matrices, cutoffs, model=None, device=device)
             baseline_filtered.append(bfm)
 
+            #NOISY BASELINE
+            noisy_inputs = add_white_noise(inputs, 0, 1, device=device)
+            nfm = sweep_filters(noisy_inputs, targets, conv_matrices, cutoffs, model=None, device=device)
+            #diff = abs(fm[0] - nfm[0])
+            #if nfm[0] < fm[0]:
+            noisy_filtered.append(nfm)
+
+
     # SAVE METRICS
     filtered_mse = np.asarray(filtered_mse)
     baseline_filtered = np.asarray(baseline_filtered)
+    noisy_filtered = np.asarray(noisy_filtered)
     avg_filtered_mse = np.mean(filtered_mse, axis=0)
     avg_baseline_filtered = np.mean(baseline_filtered, axis=0)
-    metrics = {'mse': float(np.mean(mse)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist(), 'avg_baseline_filtered':avg_baseline_filtered.tolist(), 'baseline_filtered':baseline_filtered.tolist()}
+    avg_noisy_filtered = np.mean(noisy_filtered, axis=0)
+    metrics = {'mse': float(np.mean(mse)), 'weight_norms':norms, 'cutoffs':list(cutoffs), 'avg_filtered_mse': avg_filtered_mse.tolist(), 'filtered_mse': filtered_mse.tolist(), 'avg_baseline_filtered':avg_baseline_filtered.tolist(), 'baseline_filtered':baseline_filtered.tolist(), 'avg_noisy_filtered':avg_noisy_filtered.tolist(), 'noisy_filtered':noisy_filtered.tolist()}
     with open(str(save_path /'metrics.json'), 'w') as f:
         json.dump(metrics,f)
 
