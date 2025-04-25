@@ -62,11 +62,11 @@ class CNNAutoEncoder(nn.Module):
         https://asiltureli.github.io/Convolution-Layer-Calculator/
         """
         ###1024 dim encoders
-        if self.n_encoder == 3 and self.input_dim < 128 and self.inner_size > 512 and self.inner_size < 1024:
+        if self.n_encoder == 3 and self.input_dim < 128 and self.inner_size > 512 and self.inner_size <= 1024:
             return {'in_size': [self.input_dim, 128, 512],
                       'out_size': [128,512,self.inner_size],
                       'kernel_size':[self.initial_ekernel,3,3]} 
-        elif self.n_encoder == 2 and self.input_dim <= 512 and self.inner_size > 512 and self.inner_size < 1024:
+        elif self.n_encoder == 2 and self.input_dim <= 512 and self.inner_size > 512 and self.inner_size <= 1024:
             return {'in_size': [self.input_dim, 512],
                       'out_size': [512,self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
@@ -123,11 +123,11 @@ class CNNAutoEncoder(nn.Module):
         """
         ###1024 dim decoders
         
-        if self.n_decoder == 3 and self.inner_size>=512 and self.input_dim<=128:
+        if self.n_decoder == 3 and self.inner_size>=512 and self.inner_size <= 1024 and self.input_dim<=128:
             return {'in_size': [self.inner_size, 512, 128],
                       'out_size': [512, 128, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3,3]}
-        elif self.n_decoder == 2 and self.inner_size>512 and self.input_dim<=512:
+        elif self.n_decoder == 2 and self.inner_size>=512 and self.inner_size <= 1024 and self.input_dim<=512:
             return {'in_size': [self.inner_size, 512],
                       'out_size': [512, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
