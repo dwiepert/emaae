@@ -62,11 +62,11 @@ class CNNAutoEncoder(nn.Module):
         https://asiltureli.github.io/Convolution-Layer-Calculator/
         """
         ###1024 dim encoders
-        if self.n_encoder == 3 and self.input_dim < 128 and self.inner_size > 512:
+        if self.n_encoder == 3 and self.input_dim < 128 and self.inner_size > 512 and self.inner_size < 1024:
             return {'in_size': [self.input_dim, 128, 512],
                       'out_size': [128,512,self.inner_size],
                       'kernel_size':[self.initial_ekernel,3,3]} 
-        elif self.n_encoder == 2 and self.input_dim <= 512 and self.inner_size > 512:
+        elif self.n_encoder == 2 and self.input_dim <= 512 and self.inner_size > 512 and self.inner_size < 1024:
             return {'in_size': [self.input_dim, 512],
                       'out_size': [512,self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
