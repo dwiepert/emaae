@@ -35,7 +35,7 @@ class CNNAutoEncoder(nn.Module):
         self.initial_ekernel=initial_ekernel
         self.initial_dkernel=initial_dkernel
         self.input_dim = input_dim
-        if self.input_dim not in [13, 768, 1408]:
+        if self.input_dim not in [13, 50, 768, 1408]:
             raise NotImplementedError(f'Model not compatible with {self.input_dim} dimensional features.')
         self.n_encoder = n_encoder
         if self.n_encoder not in [2,3,4,5]:
@@ -107,6 +107,10 @@ class CNNAutoEncoder(nn.Module):
              return {'in_size': [self.input_dim,1700],
                       'out_size': [1700, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
+        elif self.n_encoder == 2 and self.input_dim == 50 and self.inner_size == 1408:
+             return {'in_size': [self.input_dim, 700],
+                      'out_size': [700, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
     
     def _decoder_block_options(self):
         """
@@ -150,6 +154,10 @@ class CNNAutoEncoder(nn.Module):
         elif self.n_decoder == 2 and self.input_dim == 1408 and self.inner_size == 1408:
             return {'in_size': [self.inner_size, self.inner_size],
                       'out_size': [self.inner_size, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 2 and self.input_dim == 50 and self.inner_size == 1408:
+            return {'in_size': [self.inner_size, 700],
+                      'out_size': [700, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
         elif self.n_decoder == 3 and self.input_dim == 1408 and self.inner_size == 1408:
             return {'in_size': [self.inner_size, self.inner_size, self.inner_size],
