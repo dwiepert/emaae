@@ -44,7 +44,7 @@ class CNNAutoEncoder(nn.Module):
         if self.n_decoder not in [2,3,4,5]:
             raise NotImplementedError(f'Model not compatible with {self.n_decoder} decoder blocks.')
         self.inner_size = inner_size
-        if self.inner_size not in [512,768,1024,1408, 2000, 2048]:
+        if self.inner_size not in [512,768,1024,1408, 1000, 2000, 2048]:
             raise NotImplementedError(f'Model not compatible with an inner dimension of {self.inner_size}.')
 
         self.batchnorm_first = batchnorm_first
@@ -115,6 +115,10 @@ class CNNAutoEncoder(nn.Module):
              return {'in_size': [self.input_dim, 1000],
                       'out_size': [1000, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
+        elif self.n_encoder == 2 and self.input_dim <=200 and self.inner_size == 1000:
+             return {'in_size': [self.input_dim, 500],
+                      'out_size': [500, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
         elif self.n_encoder == 3 and self.input_dim <=200 and self.inner_size == 1408:
             return {'in_size': [self.input_dim, 500, 1000],
                     'out_size': [500,1000, self.inner_size],
@@ -170,6 +174,10 @@ class CNNAutoEncoder(nn.Module):
         elif self.n_decoder == 2 and self.input_dim <=200 and self.inner_size == 2000:
             return {'in_size': [self.inner_size, 1000],
                       'out_size': [1000, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 2 and self.input_dim <=200 and self.inner_size == 1000:
+            return {'in_size': [self.inner_size, 500],
+                      'out_size': [500, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
         elif self.n_decoder == 3 and self.input_dim == 1408 and self.inner_size == 1408:
             return {'in_size': [self.inner_size, self.inner_size, self.inner_size],
