@@ -111,6 +111,10 @@ class CNNAutoEncoder(nn.Module):
              return {'in_size': [self.input_dim, 700],
                       'out_size': [700, self.inner_size],
                       'kernel_size':[self.initial_ekernel,3]}
+        elif self.n_encoder == 2 and self.input_dim <=200 and self.inner_size == 2000:
+             return {'in_size': [self.input_dim, 1000],
+                      'out_size': [1000, self.inner_size],
+                      'kernel_size':[self.initial_ekernel,3]}
         elif self.n_encoder == 3 and self.input_dim <=200 and self.inner_size == 1408:
             return {'in_size': [self.input_dim, 500, 1000],
                     'out_size': [500,1000, self.inner_size],
@@ -162,6 +166,10 @@ class CNNAutoEncoder(nn.Module):
         elif self.n_decoder == 2 and self.input_dim <=200 and self.inner_size == 1408:
             return {'in_size': [self.inner_size, 700],
                       'out_size': [700, self.input_dim],
+                      'kernel_size':[self.initial_dkernel,3]}
+        elif self.n_decoder == 2 and self.input_dim <=200 and self.inner_size == 2000:
+            return {'in_size': [self.inner_size, 1000],
+                      'out_size': [1000, self.input_dim],
                       'kernel_size':[self.initial_dkernel,3]}
         elif self.n_decoder == 3 and self.input_dim == 1408 and self.inner_size == 1408:
             return {'in_size': [self.inner_size, self.inner_size, self.inner_size],
