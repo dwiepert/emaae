@@ -258,6 +258,10 @@ class CNNAutoEncoder(nn.Module):
         """
         return self.model.decoder(x)
     
+    def forward(self, x:torch.Tensor) -> torch.Tensor:
+        ex = self.model.encoder(x)
+        return self.model.decoder(x)
+    
     def get_type(self) -> str:
         """
         Return the model type
